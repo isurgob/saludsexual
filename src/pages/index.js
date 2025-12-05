@@ -12,6 +12,7 @@ import {
   SimpleGrid,
   ThemeIcon,
   ActionIcon,
+  ScrollArea,
 } from "@mantine/core";
 import {
   IconHeartHandshake,
@@ -26,7 +27,7 @@ import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import {
   HivIcon,
   VacunaIcon,
@@ -148,23 +149,56 @@ export default function Home() {
 
   const scrollLeft = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
+      // Buscar el viewport del ScrollArea
+      const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+   
+      
+      if (viewport) {
+        // Usar scrollTo para mayor compatibilidad
+        const currentScrollLeft = viewport.scrollLeft;
+        viewport.scrollTo({
+          left: currentScrollLeft - 300,
+          behavior: 'smooth'
+        });
+      } else {
+        // Fallback: buscar cualquier elemento con scroll
+        const scrollableElement = scrollRef.current.querySelector('div[style*="overflow"]') || scrollRef.current;
+        if (scrollableElement) {
+          scrollableElement.scrollLeft -= 300;
+        }
+      }
     }
   };
 
   const scrollRight = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
+      // Buscar el viewport del ScrollArea
+      const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      
+      if (viewport) {
+        // Usar scrollTo para mayor compatibilidad
+        const currentScrollLeft = viewport.scrollLeft;
+        viewport.scrollTo({
+          left: currentScrollLeft + 300,
+          behavior: 'smooth'
+        });
+      } else {
+        // Fallback: buscar cualquier elemento con scroll
+        const scrollableElement = scrollRef.current.querySelector('div[style*="overflow"]') || scrollRef.current;
+        if (scrollableElement) {
+          scrollableElement.scrollLeft += 300;
+        }
+      }
     }
   };
 
   return (
     <>
       <Head>
-        <title>Comodoro Salud - Asistente Virtual de Salud</title>
+        <title>Comodoro Salud </title>
         <meta
           name="description"
-          content="Asistente Virtual de Salud del Municipio de Comodoro Rivadavia. Información sobre salud, VIH, ITS, anticonceptivos, embarazo y más."
+          content="Sitio web sobre salud sexual con un chatbot de Salud Sexual del Municipio de Comodoro Rivadavia. Información sobre salud, VIH, ITS, anticonceptivos, embarazo y más."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
@@ -185,7 +219,7 @@ export default function Home() {
               }}
             >
               <Image
-                src="/banner_index.png"
+                src="/bannerfinalsalud.png"
                 alt="Banner Salud Comodoro"
                 width={800}
                 height={400}
@@ -207,7 +241,7 @@ export default function Home() {
               mt={30}
               className="page-title"
             >
-              ¿Queres sacarte todas tus dudas?
+              ¡Sacate todas tus dudas sobre salud sexual!
             </Title>
             <Text size="lg" c="dimmed" maw={600} mx="auto" mb="xl" mt={10}>
               Chateá con nuestro chatbot de forma anónima y confidencial.
@@ -254,7 +288,7 @@ export default function Home() {
               👆 Desliza horizontalmente para ver más temas
             </Text>
 
-            {/* Carrusel Container */}
+            {/* Carrusel Container con ScrollArea y Flechas */}
             <Box pos="relative">
               {/* Botón Izquierdo */}
               <ActionIcon
@@ -276,60 +310,63 @@ export default function Home() {
                 <IconChevronLeft size={20} />
               </ActionIcon>
 
-              {/* Área de desplazamiento */}
-              <div
+              {/* ScrollArea horizontal de Mantine */}
+              <ScrollArea 
                 ref={scrollRef}
-                style={{
-                  display: "flex",
-                  gap: "16px",
-                  overflowX: "auto",
-                  overflowY: "hidden",
-                  padding: "0 40px",
-                  scrollbarWidth: "none",
-                  msOverflowStyle: "none",
-                  WebkitOverflowScrolling: "touch",
+                w="100%"
+                type="always"
+                offsetScrollbars
+                scrollbarSize={12}
+                scrollHideDelay={0}
+                styles={{
+                  scrollbar: {
+                    '&[data-orientation="vertical"]': {
+                      display: 'none !important',
+                    },
+                  },
                 }}
-                className="carousel-container"
               >
-                {features.map((feature, index) => (
-                  <Card
-                    key={index}
-                    component={Link}
-                    href={feature.href}
-                    shadow="sm"
-                    padding="lg"
-                    radius="md"
-                    withBorder
-                    style={{
-                      cursor: "pointer",
-                      transition: "transform 0.2s",
-                      textDecoration: "none",
-                      color: "inherit",
-                      minWidth: "200px",
-                      maxWidth: "200px",
-                      flexShrink: 0,
-                    }}
-                    className="hover-card"
-                  >
-                    <Stack align="center" ta="center" gap="sm">
-                      <ThemeIcon
-                        size={90}
-                        radius="50%"
-                        variant="filled"
-                        style={{ backgroundColor: "#FFF2F6" }}
-                      >
-                        <feature.icon size={64} />
-                      </ThemeIcon>
-                      <Title order={4} size="1.1rem">
-                        {feature.title}
-                      </Title>
-                      <Text size="sm" c="dimmed">
-                        {feature.description}
-                      </Text>
-                    </Stack>
-                  </Card>
-                ))}
-              </div>
+                <Box style={{ display: 'flex', gap: '16px', padding: '16px 40px' }}>
+                  {features.map((feature, index) => (
+                    <Card
+                      key={index}
+                      component={Link}
+                      href={feature.href}
+                      shadow="sm"
+                      padding="lg"
+                      radius="md"
+                      withBorder
+                      style={{
+                        cursor: "pointer",
+                        transition: "transform 0.2s",
+                        textDecoration: "none",
+                        color: "inherit",
+                        minWidth: "220px",
+                        width: "220px",
+                        flexShrink: 0,
+                      }}
+                      className="hover-card"
+                    >
+                      <Stack align="center" ta="center" gap="sm">
+                        <ThemeIcon
+                          size={90}
+                          radius="50%"
+                          variant="filled"
+                          style={{ backgroundColor: "#FFF2F6" }}
+                        >
+                          <feature.icon size={64} />
+                        </ThemeIcon>
+                        <Title order={4} size="1.1rem">
+                          {feature.title}
+                        </Title>
+                        <Text size="sm" c="dimmed">
+                          {feature.description}
+                        </Text>
+                      </Stack>
+                    </Card>
+                  ))}
+                </Box>
+              </ScrollArea>
 
               {/* Botón Derecho */}
               <ActionIcon
@@ -356,30 +393,38 @@ export default function Home() {
         
         </Stack>
 
-        <style jsx>{`
+        <style jsx global>{`
           .hover-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
           }
 
-          /* Estilos para el carrusel */
-          .carousel-container {
-            scroll-behavior: smooth;
+          /* Personalización de ScrollArea - Solo horizontal con color rosa original */
+          .mantine-ScrollArea-scrollbar {
+            background-color: #f1f3f4 !important;
+            border-radius: 6px;
+            opacity: 1 !important;
           }
-
-          /* Ocultar scrollbar en webkit browsers */
-          .carousel-container::-webkit-scrollbar {
-            display: none;
+          
+          .mantine-ScrollArea-thumb {
+            background: linear-gradient(90deg, #e64980, #f06595) !important;
+            border-radius: 6px;
+            opacity: 1 !important;
           }
-
-          /* Ocultar scrollbar en Firefox */
-          .carousel-container {
-            scrollbar-width: none;
+          
+          .mantine-ScrollArea-scrollbar:hover .mantine-ScrollArea-thumb {
+            background: linear-gradient(90deg, #d63384, #e64980) !important;
           }
-
-          /* Ocultar scrollbar en IE/Edge */
-          .carousel-container {
-            -ms-overflow-style: none;
+          
+          /* Asegurar que la scrollbar siempre esté visible */
+          .mantine-ScrollArea-scrollbar[data-state="visible"],
+          .mantine-ScrollArea-scrollbar[data-state="hidden"] {
+            opacity: 1 !important;
+          }
+          
+          /* Solo ocultar scrollbar vertical */
+          .mantine-ScrollArea-scrollbar[data-orientation="vertical"] {
+            display: none !important;
           }
         `}</style>
       </Container>

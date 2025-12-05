@@ -47,6 +47,7 @@ import {
   IconBrandWhatsapp,
   IconPhone,
   IconCalendar,
+  IconDownload,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import Head from "next/head";
@@ -64,32 +65,28 @@ export default function Dashboard() {
   const [mapStatsLoading, setMapStatsLoading] = useState(true);
   const [mapError, setMapError] = useState(null);
 
+  // Estado para métricas del chatbot
+  const [chatStats, setChatStats] = useState(null);
+  const [whatsappStats, setWhatsappStats] = useState(null);
+  const [chatStatsLoading, setChatStatsLoading] = useState(true);
+  const [chatError, setChatError] = useState(null);
+  
+  // Estado para descarga de conversaciones
+  const [downloadLoading, setDownloadLoading] = useState(false);
+
   // Verificar autenticación con NextAuth
   useEffect(() => {
     if (status === "loading") return; // Aún cargando
 
     if (status === "unauthenticated") {
-      console.log("❌ Usuario no autenticado, redirigiendo a login");
       router.push("/login");
       return;
     }
 
     if (session?.user) {
-      console.log("✅ Usuario autenticado en DASHBOARD:", {
-        sessionUser: session.user,
-        role: session.user.role,
-        userId: session.user.userId,
-        id: session.user.id,
-        email: session.user.email,
-        name: session.user.name,
-        sessionKeys: Object.keys(session),
-        userKeys: Object.keys(session.user)
-      });
-      console.log("🎫 Token de acceso disponible:", !!session.accessToken);
 
       // Verificar que sea admin o moderador
       if (session.user.role !== 1 && session.user.role !== 2) {
-        console.log("⚠️ Usuario sin permisos adecuados");
         router.push("/login?error=insufficient_permissions");
         return;
       }
@@ -125,15 +122,101 @@ export default function Dashboard() {
     }
   };
 
+  // Cargar métricas del chatbot
+  const loadChatbotStats = async () => {
+    try {
+      setChatStatsLoading(true);
+      setChatError(null);
+
+      // Cargar stats del chat web y WhatsApp en paralelo
+      const [chatResponse, whatsappResponse] = await Promise.all([
+        fetch("/api/chat/stats?days=30"),
+        fetch("/api/whatsapp/stats?days=30")
+      ]);
+
+      if (!chatResponse.ok) {
+        throw new Error(`Error cargando chat stats: ${chatResponse.status}`);
+      }
+
+      if (!whatsappResponse.ok) {
+        throw new Error(`Error cargando WhatsApp stats: ${whatsappResponse.status}`);
+      }
+
+      const chatData = await chatResponse.json();
+      const whatsappData = await whatsappResponse.json();
+
+      if (chatData.success && whatsappData.success) {
+        setChatStats(chatData.data);
+        setWhatsappStats(whatsappData.data);
+      } else {
+        throw new Error("Error obteniendo datos del servidor");
+      }
+    } catch (error) {
+      console.error("Error cargando métricas del chatbot:", error);
+      setChatError(error.message);
+      setChatStats(null);
+      setWhatsappStats(null);
+    } finally {
+      setChatStatsLoading(false);
+    }
+  };
+
   // Cargar métricas cuando el usuario esté autenticado
   useEffect(() => {
     if (session?.user && !loading) {
       loadMapStats();
+      loadChatbotStats();
     }
   }, [session, loading]);
 
+  // Función para descargar conversaciones
+  const handleDownloadConversations = async (format = 'csv') => {
+    try {
+      setDownloadLoading(true);
+      
+      const response = await fetch(`/api/chat/export-conversations?format=${format}`);
+      
+      if (!response.ok) {
+        throw new Error('Error al descargar el informe');
+      }
+      
+      if (format === 'csv') {
+        // Descargar CSV
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `conversaciones-chatbot-completo-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        // Para JSON, abrir en nueva ventana o mostrar datos
+        const data = await response.json();
+        if (data.success) {
+          // Crear y descargar archivo JSON
+          const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `conversaciones-chatbot-completo-${new Date().toISOString().split('T')[0]}.json`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error descargando conversaciones:', error);
+      // Aquí podrías mostrar una notificación de error
+    } finally {
+      setDownloadLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
-    console.log("🚪 Cerrando sesión...");
     await signOut({
       callbackUrl: "/login",
       redirect: true,
@@ -330,10 +413,91 @@ export default function Dashboard() {
                     Estadísticas de uso y rendimiento del asistente virtual
                   </Text>
                 </Box>
-                <Badge variant="light" color="brand">
-                  Datos en tiempo real
-                </Badge>
+                <Group>
+                  {chatStatsLoading && (
+                    <Badge variant="light" color="blue">
+                      Cargando...
+                    </Badge>
+                  )}
+                  {!chatStatsLoading && !chatError && (
+                    <>
+                      <Badge variant="light" color="brand">
+                        Datos en tiempo real
+                      </Badge>
+                      <Button
+                        variant="gradient"
+                        gradient={{ from: 'teal', to: 'cyan' }}
+                        size="sm"
+                        leftSection={<IconDownload size={16} />}
+                        loading={downloadLoading}
+                        onClick={() => handleDownloadConversations('csv')}
+                      >
+                        Descargar Informe
+                      </Button>
+                    </>
+                  )}
+                  {chatError && (
+                    <Button
+                      variant="light"
+                      size="xs"
+                      color="red"
+                      onClick={loadChatbotStats}
+                    >
+                      Reintentar
+                    </Button>
+                  )}
+                </Group>
               </Group>
+
+              {/* Mostrar error si existe */}
+              {chatError && (
+                <Alert
+                  icon={<IconAlertCircle size={16} />}
+                  title="Error cargando métricas del chatbot"
+                  color="red"
+                  mb="lg"
+                >
+                  {chatError}
+                </Alert>
+              )}
+
+              {/* Mostrar alerta solo si hay error en la nota del API */}
+              {!chatStatsLoading && chatStats && chatStats.note && chatStats.note.includes('TABLAS') && (
+                <Alert
+                  icon={<IconAlertCircle size={16} />}
+                  title="📊 Sistema de Chatbot sin configurar"
+                  color="yellow"
+                  mb="lg"
+                >
+                  <Stack gap="xs">
+                    <Text size="sm">
+                      Las tablas del sistema de chat no están creadas en la base de datos.
+                    </Text>
+                    <Text size="sm" fw={500}>
+                      Para habilitar el tracking del chatbot:
+                    </Text>
+                    <Text size="sm" style={{ fontFamily: 'monospace', backgroundColor: '#f8f9fa', padding: '8px', borderRadius: '4px' }}>
+                      Ejecuta: database/create_chat_tables.sql en PostgreSQL
+                    </Text>
+                  </Stack>
+                </Alert>
+              )}
+
+              {/* Información sobre descarga de conversaciones */}
+              {!chatStatsLoading && !chatError && (
+                <Alert
+                  icon={<IconDownload size={16} />}
+                  title="📥 Informe Completo de Conversaciones"
+                  color="teal"
+                  mb="lg"
+                  variant="light"
+                >
+                  <Text size="sm">
+                    El botón &quot;Descargar Informe&quot; exporta TODAS las conversaciones registradas del chatbot (Web + WhatsApp) 
+                    en formato Excel (CSV). La descarga puede tardar unos momentos si hay muchas conversaciones.
+                  </Text>
+                </Alert>
+              )}
 
               {/* Estadísticas de mensajes */}
               <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg" mb="xl">
@@ -354,11 +518,22 @@ export default function Dashboard() {
                       </Text>
                     </Group>
                     <Text fw={700} size="lg" className="dashboard-primary">
-                      1,456
+                      {chatStatsLoading ? "..." : (chatStats?.stats?.total_messages?.toLocaleString() || "0")}
                     </Text>
                   </Group>
                   <Text size="xs" className="dashboard-text-muted" mt="xs">
-                    62% del total de conversaciones
+                    {chatStatsLoading ? "Cargando..." : (() => {
+                      const webTotal = chatStats?.stats?.total_messages || 0;
+                      const whatsappTotal = whatsappStats?.stats?.total_messages || 0;
+                      const totalMessages = webTotal + whatsappTotal;
+                      
+                      if (totalMessages === 0) {
+                        return "Sin conversaciones registradas";
+                      }
+                      
+                      const percentage = Math.round((webTotal / totalMessages) * 100);
+                      return `${percentage}% del total de conversaciones`;
+                    })()}
                   </Text>
                 </Card>
 
@@ -387,11 +562,22 @@ export default function Dashboard() {
                       size="lg"
                       style={{ color: "var(--analytics-success)" }}
                     >
-                      892
+                      {chatStatsLoading ? "..." : (whatsappStats?.stats?.total_messages?.toLocaleString() || "0")}
                     </Text>
                   </Group>
                   <Text size="xs" className="dashboard-text-muted" mt="xs">
-                    38% del total de conversaciones
+                    {chatStatsLoading ? "Cargando..." : (() => {
+                      const webTotal = chatStats?.stats?.total_messages || 0;
+                      const whatsappTotal = whatsappStats?.stats?.total_messages || 0;
+                      const totalMessages = webTotal + whatsappTotal;
+                      
+                      if (totalMessages === 0) {
+                        return "Sin conversaciones registradas";
+                      }
+                      
+                      const percentage = Math.round((whatsappTotal / totalMessages) * 100);
+                      return `${percentage}% del total de conversaciones`;
+                    })()}
                   </Text>
                 </Card>
 
@@ -420,11 +606,23 @@ export default function Dashboard() {
                       size="lg"
                       style={{ color: "var(--analytics-warning)" }}
                     >
-                      23,456
+                      {chatStatsLoading ? "..." : (
+                        ((chatStats?.stats?.total_messages || 0) + (whatsappStats?.stats?.total_messages || 0)).toLocaleString()
+                      )}
                     </Text>
                   </Group>
                   <Text size="xs" className="dashboard-text-muted" mt="xs">
-                    +8% desde ayer
+                    {chatStatsLoading ? "Cargando..." : (() => {
+                      const webTotal = chatStats?.stats?.total_messages || 0;
+                      const whatsappTotal = whatsappStats?.stats?.total_messages || 0;
+                      const totalMessages = webTotal + whatsappTotal;
+                      
+                      if (totalMessages === 0) {
+                        return "Sin datos en el período";
+                      }
+                      
+                      return chatStats?.period || "Últimos 30 días";
+                    })()}
                   </Text>
                 </Card>
               </SimpleGrid>
@@ -442,37 +640,66 @@ export default function Dashboard() {
               >
                 Actividad de Hoy
               </Title>
-              <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
-                <Box ta="center" p="md" bg="blue.0" radius="md">
-                  <IconMessageCircle size={32} color="#339af0" />
-                  <Text fw={700} size="xl" mt="xs" c="blue">
-                    89
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    Consultas Generales
-                  </Text>
-                </Box>
-
-                <Box ta="center" p="md" bg="red.0" radius="md">
-                  <IconActivity size={32} color="#fa5252" />
-                  <Text fw={700} size="xl" mt="xs" c="red">
-                    23
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    Emergencias
-                  </Text>
-                </Box>
-
-                <Box ta="center" p="md" bg="orange.0" radius="md">
-                  <IconCalendar size={32} color="#ff922b" />
-                  <Text fw={700} size="xl" mt="xs" c="orange">
-                    15
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    Citas Médicas
-                  </Text>
-                </Box>
-              </SimpleGrid>
+              <Group justify="center">
+                <Card 
+                  withBorder 
+                  p="xl" 
+                  radius="lg" 
+                  shadow="md"
+                  style={{ 
+                    minWidth: "300px",
+                    maxWidth: "400px"
+                  }}
+                >
+                  <Stack align="center" gap="lg">
+                    <ThemeIcon size="xxl" variant="gradient" gradient={{ from: "#1b436b", to: "cyan" }}>
+                      <IconMessageCircle size={40} />
+                    </ThemeIcon>
+                    <Text 
+                      size="xl"
+                      ta="center" 
+                      fw={700}
+                      style={{ 
+                        background: "linear-gradient(135deg, #1b436b 0%, cyan 100%)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text"
+                      }}
+                    >
+                      Consultas Generales de Hoy
+                    </Text>
+                    <Text 
+                      size="4rem" 
+                      fw={800} 
+                      ta="center" 
+                      style={{ 
+                        lineHeight: 1,
+                        background: "linear-gradient(135deg, #1b436b 0%, cyan 100%)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text"
+                      }}
+                    >
+                      {chatStatsLoading ? "..." : (
+                        ((chatStats?.stats?.today?.general || 0) + (whatsappStats?.stats?.today?.general || 0))
+                      )}
+                    </Text>
+                    <Text 
+                      size="md" 
+                      ta="center"
+                      fw={500}
+                      style={{ 
+                        background: "linear-gradient(135deg, #1b436b 0%, cyan 100%)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text"
+                      }}
+                    >
+                      Web Chat + WhatsApp
+                    </Text>
+                  </Stack>
+                </Card>
+              </Group>
             </Paper>
 
             {/* Métricas del Mapa */}
@@ -498,7 +725,7 @@ export default function Dashboard() {
                 </Box>
                 {!mapStatsLoading && mapStats && (
                   <Badge variant="light" color="brand">
-                    {mapStats.generalStats.unique_users} usuarios únicos
+                    {mapStats.generalStats.unique_users} usuarios diferentes
                   </Badge>
                 )}
               </Group>
@@ -1247,7 +1474,7 @@ export default function Dashboard() {
                     mb="md"
                   >
                     Métricas específicas para usuarios móviles: patrones,
-                    horarios y páginas más visitadas desde smartphones
+                    horarios y páginas más visitadas desde Celular
                   </Text>
 
                   <Group gap="xs">
@@ -1370,19 +1597,7 @@ export default function Dashboard() {
                   </Group>
                 </Card>
               </SimpleGrid>
-
-              {/* Botón para ver analytics completo */}
-              <Group justify="center" mt="lg">
-                <Button
-                  variant="gradient"
-                  gradient={{ from: "blue", to: "cyan" }}
-                  size="md"
-                  leftSection={<IconChartBar size={16} />}
-                  onClick={() => router.push("/admin/analytics-general")}
-                >
-                  Ver Tablero Completo de Métricas
-                </Button>
-              </Group>
+            
             </Paper>
           </Stack>
         </Container>

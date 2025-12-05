@@ -87,7 +87,6 @@ async function handleTrackVisit(req, res) {
  */
 async function handleGetVisitStats(req, res) {
   try {
-    console.log('API Request params:', req.query);
     const { days = 30, startDate, endDate } = req.query;
     
     let dateCondition = '';
@@ -110,12 +109,10 @@ async function handleGetVisitStats(req, res) {
       dateCondition = `timestamp >= '${formattedStartDate}' AND timestamp <= '${formattedEndDate}'`;
       periodDescription = `Del ${start.toLocaleDateString('es-ES')} al ${end.toLocaleDateString('es-ES')}`;
       
-      console.log('Using date range:', { formattedStartDate, formattedEndDate, dateCondition });
     } else {
       // Fallback a días si no se proporcionan fechas específicas
       const daysNum = parseInt(days);
       if (isNaN(daysNum) || daysNum < 1 || daysNum > 365) {
-        console.log('Using default days value: 30');
         const defaultDays = 30;
         dateCondition = `timestamp >= CURRENT_DATE - INTERVAL '${defaultDays} days'`;
         periodDescription = `Últimos ${defaultDays} días`;
@@ -124,8 +121,6 @@ async function handleGetVisitStats(req, res) {
         periodDescription = `Últimos ${daysNum} días`;
       }
     }
-    
-    console.log('Final date condition:', dateCondition);
 
     // Verificar que tenemos datos para el período
     const countQuery = `SELECT COUNT(*) as count FROM anonymous_visits WHERE ${dateCondition}`;
@@ -133,7 +128,6 @@ async function handleGetVisitStats(req, res) {
     const totalRecords = parseInt(countResult.rows[0].count);
     
     if (totalRecords === 0) {
-      console.log('No data found for the specified period');
       return res.status(200).json({
         success: true,
         data: {
@@ -158,8 +152,6 @@ async function handleGetVisitStats(req, res) {
       });
     }
 
-    console.log(`Found ${totalRecords} records for analysis`);
-
     // Estadísticas generales
     const generalStatsQuery = `
       SELECT 
@@ -179,7 +171,6 @@ async function handleGetVisitStats(req, res) {
       WHERE ${dateCondition}
     `;
     
-    console.log('General stats query prepared');
 
     // Páginas más visitadas
     const popularPagesQuery = `
@@ -250,8 +241,6 @@ async function handleGetVisitStats(req, res) {
     let generalStats, popularPages, weeklyPatterns, hourlyPatterns, dailyTrends;
     
     try {
-      console.log('Executing database queries...');
-      console.log('Date condition:', dateCondition);
       
       [
         generalStats,
@@ -266,8 +255,7 @@ async function handleGetVisitStats(req, res) {
         query(hourlyPatternsQuery),
         query(dailyTrendsQuery)
       ]);
-      
-      console.log('Database queries completed successfully');
+    
     } catch (dbError) {
       console.error('Database query error:', dbError);
       console.error('Query details:', {
@@ -287,8 +275,6 @@ async function handleGetVisitStats(req, res) {
       dailyTrends: dailyTrends.rows || [],
       lastUpdated: new Date().toISOString()
     };
-
-    console.log('Sending response with stats:', Object.keys(stats));
     
     res.status(200).json({
       success: true,

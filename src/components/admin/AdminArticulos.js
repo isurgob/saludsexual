@@ -92,15 +92,10 @@ export default function AdminArticulos() {
 
   // Función para editar un artículo
   const editarArticulo = (articulo) => {
-    console.log('🖊️ Iniciando edición de artículo:', articulo);
     setArticuloSeleccionado(articulo);
     setFormData({
       titulo: articulo.titulo,
       html: articulo.html,
-    });
-    console.log('📝 Datos del formulario establecidos:', {
-      titulo: articulo.titulo,
-      html: articulo.html?.substring(0, 100) + '...'
     });
     setModalEditarAbrir(true);
   };
@@ -162,15 +157,7 @@ export default function AdminArticulos() {
   // Función para guardar cambios
   const guardarCambios = async () => {
     try {
-      setGuardando(true);
-      
-      console.log('🔄 Enviando datos de edición:', {
-        id: articuloSeleccionado.id,
-        titulo: formData.titulo,
-        html: formData.html,
-        usuario: 1
-      });
-      
+      setGuardando(true);          
       const response = await fetch(`/api/articulos/${articuloSeleccionado.id}`, {
         method: 'PUT',
         headers: {
@@ -183,17 +170,12 @@ export default function AdminArticulos() {
         }),
       });
       
-      console.log('📡 Respuesta del servidor:', response.status, response.statusText);
-      
       const responseData = await response.json();
-      console.log('📄 Datos de respuesta:', responseData);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${responseData.message || response.statusText}`);
       }
       
-      // Recargar artículos y cerrar modal
-      console.log('✅ Artículo actualizado, recargando lista...');
       await cargarArticulos();
       setModalEditarAbrir(false);
       

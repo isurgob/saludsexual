@@ -25,18 +25,10 @@ export function useArticulo(titulo) {
         
         const responseData = await response.json();
         
-        // Debug: verificar qué datos recibimos
-        console.log('Datos recibidos de la API:', responseData);
-        console.log('Tipo de datos:', typeof responseData);
         
         // Extraer los artículos de la respuesta estructurada
         const articulos = responseData.data || responseData;
-        
-        console.log('Artículos extraídos:', articulos);
-        console.log('Es array:', Array.isArray(articulos));
-        console.log('Títulos disponibles:', articulos.map(art => art.titulo));
-        console.log('Buscando título:', titulo);
-        
+       
         // Verificar que articulos sea un array
         if (!Array.isArray(articulos)) {
           throw new Error('La respuesta de la API no es un array de artículos');
@@ -73,8 +65,6 @@ export function useArticulo(titulo) {
           
           return false;
         });
-        
-        console.log('Artículo encontrado:', articuloEncontrado);
         
         if (!articuloEncontrado) {
           throw new Error(`Artículo "${titulo}" no encontrado. Títulos disponibles: ${articulos.map(art => art.titulo).join(', ')}`);

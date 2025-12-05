@@ -44,18 +44,6 @@ export default function Login() {
     }
   }, [router.query.error]);
 
-  // NO redirigir automáticamente - dejar que NextAuth maneje
-  // useEffect(() => {
-  //   if (status === 'loading') return; // Esperar a que se resuelva el estado
-    
-  //   if (status === 'authenticated' && session) {
-  //     console.log('✅ Usuario ya autenticado, redirigiendo...');
-  //     // Pequeño delay para evitar problemas de hidratación
-  //     setTimeout(() => {
-  //       router.replace('/admin/dashboard');
-  //     }, 100);
-  //   }
-  // }, [status, session, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -74,19 +62,15 @@ export default function Login() {
         return;
       }
 
-      console.log('🔐 Intentando login con:', credentials.correo);
       
       // SEGURIDAD: Hashear contraseña antes de enviar
       const hashedPassword = hashPassword(credentials.contrasena, credentials.correo);
-      console.log('🔒 Enviando contraseña hasheada (MD5)');
       
       const result = await signIn('credentials', {
         correo: credentials.correo,
         contrasena: hashedPassword, // Enviar hash, no texto plano
         callbackUrl: '/admin/dashboard', // NextAuth redirigirá aquí automáticamente
       });
-
-      console.log('🔐 Resultado de signIn:', result);
 
       // NextAuth maneja la redirección automáticamente
       // NO hacer redirección manual aquí

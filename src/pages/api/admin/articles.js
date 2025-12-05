@@ -9,34 +9,19 @@ export default async function handler(req, res) {
     secret: process.env.NEXTAUTH_SECRET || 'isur-secret-key-2024' 
   });
 
-  // Debug del token
-  console.log('🔍 Token JWT en articles API:', {
-    hasToken: !!token,
-    token: token
-  });
+  
 
   // Verificar autenticación y permisos de admin/moderador  
   const userId = token?.userId;
   const userRole = token?.role;
   
   if (!userId || (userRole !== 1 && userRole !== 2)) {
-    console.log('❌ Token verificado en articles:', {
-      hasToken: !!token,
-      userId: userId,
-      userRole: userRole,
-      userName: token?.name
-    });
+  
     return res.status(401).json({
       success: false,
       message: 'No autorizado. Se requieren permisos de administrador.'
     });
   }
-
-  console.log('✅ Token autorizado en articles:', {
-    userId: userId,
-    role: userRole,
-    name: token?.name
-  });
 
   const { method } = req;
 

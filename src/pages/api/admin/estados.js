@@ -12,8 +12,6 @@ async function handler(req, res) {
   }
 
   try {
-    console.log('🔍 OBTENIENDO ESTADOS - Iniciando consulta');
-
     const client = await pool.connect();
     
     try {
@@ -21,12 +19,7 @@ async function handler(req, res) {
       const result = await client.query('SELECT obtener_estados()');
       
       const response = result.rows[0].obtener_estados;
-      
-      console.log('✅ ESTADOS OBTENIDOS:', {
-        success: response.success,
-        total: response.data ? response.data.length : 0
-      });
-      
+   
       if (response.success) {
         return res.status(200).json(response);
       } else {

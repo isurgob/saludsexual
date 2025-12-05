@@ -13,7 +13,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('🔍 Buscando artículo:', slug);
     
     // Obtener el artículo directamente de la tabla
     const result = await query(
@@ -21,15 +20,11 @@ export default async function handler(req, res) {
       [slug, 'published']
     );
 
-    console.log('📊 Resultado de búsqueda:', result.rows.length, 'artículos encontrados');
-
     if (result.rows.length === 0) {
-      console.log('❌ Artículo no encontrado o no publicado');
       return res.status(404).json({ error: 'Artículo no encontrado' });
     }
 
     const articleData = result.rows[0];
-    console.log('✅ Artículo encontrado:', articleData.title);
 
     // Obtener las secciones del artículo
     const sectionsResult = await query(`
@@ -44,8 +39,6 @@ export default async function handler(req, res) {
       ORDER BY order_index ASC
     `, [articleData.id]);
 
-    console.log('📑 Secciones encontradas:', sectionsResult.rows.length);
-
     // Estructurar la respuesta
     const article = {
       id: articleData.id,
@@ -59,8 +52,6 @@ export default async function handler(req, res) {
       updated_at: articleData.updated_at,
       sections: sectionsResult.rows || []
     };
-
-    console.log('🎉 Enviando respuesta con artículo:', article.title, 'y', article.sections.length, 'secciones');
     res.status(200).json(article);
 
   } catch (error) {

@@ -1,5 +1,5 @@
-import { updateCentroSalud, deleteCentroServicios, insertCentroServicio } from '../../../service/centrosSaludService.js';
-import { getMapaCategorias, getMapaTipos } from '../../../service/metadataService.js';
+import { updateCentroSalud, deleteCentroServicios, insertCentroServicio } from '../../../services/centrosSaludService.js';
+import { getMapaCategorias, getMapaTipos } from '../../../services/metadataService.js';
 
 // API route para administración de mapas/centros de salud
 export default async function handler(req, res) {
@@ -45,15 +45,6 @@ async function handleUpdate(req, res) {
         error: 'Missing id in body'
       });
     }
-
-    console.log('📝 Datos recibidos (tipos):', {
-      id: typeof id,
-      latitud: typeof latitud,
-      longitud: typeof longitud,
-      tipo: typeof tipo,
-      categoria: typeof categoria
-    });
-
     // Validaciones básicas
     if (!nombre || !direccion || !latitud || !longitud) {
       return res.status(400).json({
@@ -98,19 +89,6 @@ async function handleUpdate(req, res) {
       descripcion: descripcion ? descripcion.trim() : null
     };
 
-    console.log('📝 Datos después de conversión (tipos):', {
-      latitud: typeof updateData.latitud,
-      longitud: typeof updateData.longitud,
-      tipo: typeof updateData.tipo,
-      categoria: typeof updateData.categoria,
-      valores: {
-        latitud: updateData.latitud,
-        longitud: updateData.longitud
-      }
-    });
-
-    console.log('📝 Datos a actualizar:', { id: parseInt(id), ...updateData });
-
     // Ejecutar la actualización
     const success = await updateCentroSalud(parseInt(id), updateData);
 
@@ -120,27 +98,17 @@ async function handleUpdate(req, res) {
       let serviciosLog = [];
 
       if (servicios && Array.isArray(servicios)) {
-        console.log('🔄 Iniciando actualización de servicios...');
-        console.log('📋 Servicios a procesar:', servicios);
-
-        // 1. Eliminar todos los servicios existentes del centro
-        console.log('🗑️ Eliminando servicios existentes...');
         const deleteSuccess = await deleteCentroServicios(parseInt(id));
         
         if (deleteSuccess) {
-          console.log('✅ Servicios existentes eliminados');
-          
           // 2. Insertar los nuevos servicios uno por uno
-          console.log('➕ Insertando nuevos servicios...');
           for (const servicioId of servicios) {
             try {
               const insertSuccess = await insertCentroServicio(parseInt(id), parseInt(servicioId));
               if (insertSuccess) {
                 serviciosLog.push({ servicioId: parseInt(servicioId), status: 'success' });
-                console.log(`✅ Servicio ${servicioId} insertado correctamente`);
               } else {
                 serviciosLog.push({ servicioId: parseInt(servicioId), status: 'failed', error: 'Insert returned false' });
-                console.log(`❌ Fallo al insertar servicio ${servicioId}`);
                 serviciosUpdated = false;
               }
             } catch (serviceError) {
@@ -150,11 +118,8 @@ async function handleUpdate(req, res) {
             }
           }
         } else {
-          console.log('❌ Fallo al eliminar servicios existentes');
           serviciosUpdated = false;
         }
-      } else {
-        console.log('ℹ️ No se proporcionaron servicios para actualizar');
       }
 
       return res.status(200).json({

@@ -36,17 +36,14 @@ export default function UsuariosAdmin() {
     if (status === 'loading') return; // Aún cargando
 
     if (status === 'unauthenticated') {
-      console.log('❌ Usuario no autenticado, redirigiendo a login');
       router.push('/login');
       return;
     }
 
     if (session?.user) {
-      console.log('✅ Usuario autenticado en gestión de usuarios:', session.user);
       
       // Verificar que sea solo admin (role = 1) para gestión de usuarios
       if (session.user.role !== 1) {
-        console.log('⚠️ Usuario sin permisos de admin para gestión de usuarios');
         router.push('/admin/dashboard?error=admin_required');
         return;
       }
@@ -56,7 +53,6 @@ export default function UsuariosAdmin() {
   }, [session, status, router]);
 
   const handleLogout = async () => {
-    console.log('🚪 Cerrando sesión desde gestión de usuarios...');
     await signOut({ 
       callbackUrl: '/login',
       redirect: true 

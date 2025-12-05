@@ -54,7 +54,8 @@ const SiteAnalytics = () => {
       }
 
       const data = await response.json();
-      setAnalytics(data.data);
+      // La API devuelve { success: true, data: {...} }
+      setAnalytics(data.data || data);
     } catch (error) {
       console.error("Error loading analytics:", error);
       setError(error.message);
@@ -71,37 +72,44 @@ const SiteAnalytics = () => {
   };
 
   const getDeviceData = () => {
-    if (!analytics?.generalStats) return [];
+    if (!analytics?.generalStats) {
+      return [];
+    }
 
-    const {
-      mobile_visits = 0,
-      desktop_visits = 0,
-      tablet_visits = 0,
-    } = analytics.generalStats;
+    const generalStats = analytics.generalStats;
+    
+    // Convertir a números enteros para asegurar cálculos correctos
+    const mobile_visits = parseInt(generalStats.mobile_visits) || 0;
+    const desktop_visits = parseInt(generalStats.desktop_visits) || 0;
+    const tablet_visits = parseInt(generalStats.tablet_visits) || 0;
+    
     const total = mobile_visits + desktop_visits + tablet_visits;
+    if (total === 0) {
+      return [];
+    }
 
-    if (total === 0) return [];
-
-    return [
+    const result = [
       {
-        label: "Mobile",
+        label: "Celular",
         value: mobile_visits,
         percentage: Math.round((mobile_visits / total) * 100),
-        color: "green",
+        color: "#fd7e14", // naranja para móvil
       },
       {
-        label: "Desktop",
+        label: "Computadora", 
         value: desktop_visits,
         percentage: Math.round((desktop_visits / total) * 100),
-        color: "blue",
+        color: "#1c7ed6", // azul para desktop
       },
       {
         label: "Tablet",
         value: tablet_visits,
         percentage: Math.round((tablet_visits / total) * 100),
-        color: "orange",
+        color: "#51cf66", // verde para tablet
       },
-    ].filter((d) => d.value > 0);
+    ].filter((d) => d.value > 0);  
+    
+    return result;
   };
 
   const getTopPages = () => {
@@ -155,73 +163,111 @@ const SiteAnalytics = () => {
               ? new Date(analytics.lastUpdated).toLocaleDateString("es-ES")
               : "Ahora"}
           </Text>
-        </Box>
-        <Badge variant="light" color="brand" size="lg">
-          En Vivo
-        </Badge>
+        </Box>       
       </Group>
 
       {/* Métricas principales */}
       <SimpleGrid cols={{ base: 2, sm: 4 }} mb="xl">
-        <Card withBorder p="sm" radius="md" className="dashboard-card">
-          <Stack align="center" gap="xs">
-            <ThemeIcon size="xl" variant="light" color="brand">
-              <IconEye size={24} />
+        <Card withBorder p="lg" radius="md" className="dashboard-card">
+          <Stack align="center" gap="md">
+            <ThemeIcon size="xxl" variant="gradient" gradient={{ from: "#1b436b", to: "cyan" }}>
+              <IconEye size={32} />
             </ThemeIcon>
-            <Text size="xs" className="dashboard-text-muted" ta="center">
+            <Text 
+              size="lg"
+              ta="center" 
+              fw={600}
+              style={{ 
+                background: "linear-gradient(135deg, #1b436b 0%, cyan 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
+            >
               Visitas Totales
             </Text>
-            <Text size="xl" fw={700} className="dashboard-primary">
+            <Text 
+              size="3rem" 
+              fw={800} 
+              ta="center" 
+              style={{ 
+                lineHeight: 1.1,
+                background: "linear-gradient(135deg, #1b436b 0%, cyan 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
+            >
               {formatNumber(stats.total_visits)}
             </Text>
           </Stack>
         </Card>
 
-        <Card withBorder p="sm" radius="md" className="dashboard-card">
-          <Stack align="center" gap="xs">
-            <ThemeIcon size="xl" variant="light" color="green">
-              <IconUsers size={24} />
+        <Card withBorder p="lg" radius="md" className="dashboard-card">
+          <Stack align="center" gap="md">
+            <ThemeIcon size="xxl" variant="gradient" gradient={{ from: "#1b436b", to: "cyan" }}>
+              <IconUsers size={32} />
             </ThemeIcon>
-            <Text size="xs" className="dashboard-text-muted" ta="center">
+            <Text 
+              size="lg"
+              ta="center" 
+              fw={600}
+              style={{ 
+                background: "linear-gradient(135deg, #1b436b 0%, cyan 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
+            >
               Visitantes Únicos
             </Text>
             <Text
-              size="xl"
-              fw={700}
-              style={{ color: "var(--analytics-success)" }}
+              size="3rem"
+              fw={800}
+              ta="center"
+              style={{ 
+                lineHeight: 1.1,
+                background: "linear-gradient(135deg, #1b436b 0%, cyan 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
             >
               {formatNumber(stats.unique_visitors)}
             </Text>
           </Stack>
         </Card>
 
-        <Card withBorder p="sm" radius="md" className="dashboard-card">
-          <Stack align="center" gap="xs">
-            <ThemeIcon size="xl" variant="light" color="orange">
-              <IconWorld size={24} />
+        <Card withBorder p="lg" radius="md" className="dashboard-card">
+          <Stack align="center" gap="md">
+            <ThemeIcon size="xxl" variant="gradient" gradient={{ from: "#1b436b", to: "cyan" }}>
+              <IconCalendarStats size={32} />
             </ThemeIcon>
-            <Text size="xs" className="dashboard-text-muted" ta="center">
-              Páginas Únicas
-            </Text>
-            <Text
-              size="xl"
-              fw={700}
-              style={{ color: "var(--analytics-warning)" }}
+            <Text 
+              size="lg"
+              ta="center" 
+              fw={600}
+              style={{ 
+                background: "linear-gradient(135deg, #1b436b 0%, cyan 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
             >
-              {stats.unique_pages || 0}
-            </Text>
-          </Stack>
-        </Card>
-
-        <Card withBorder p="sm" radius="md" className="dashboard-card">
-          <Stack align="center" gap="xs">
-            <ThemeIcon size="xl" variant="light" color="brand">
-              <IconCalendarStats size={24} />
-            </ThemeIcon>
-            <Text size="xs" className="dashboard-text-muted" ta="center">
               Días Activos
             </Text>
-            <Text size="xl" fw={700} className="dashboard-primary">
+            <Text 
+              size="3rem" 
+              fw={800} 
+              ta="center" 
+              style={{ 
+                lineHeight: 1.1,
+                background: "linear-gradient(135deg, #1b436b 0%, cyan 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
+            >
               {stats.active_days || 0}
             </Text>
           </Stack>
@@ -274,7 +320,7 @@ const SiteAnalytics = () => {
                         w={12}
                         h={12}
                         style={{
-                          backgroundColor: `var(--mantine-color-${device.color}-5)`,
+                          backgroundColor: device.color,
                           borderRadius: "50%",
                         }}
                       />
@@ -441,21 +487,6 @@ const SiteAnalytics = () => {
             </Text>
           </Stack>
         </Group>
-
-        <Group gap="xs">
-          <ThemeIcon size="md" variant="light" color="pink">
-            <IconDeviceMobile size={16} />
-          </ThemeIcon>
-          <Stack gap={0}>
-            <Text size="sm" fw={500}>
-              {deviceData.find((d) => d.label === "Mobile")?.percentage || 0}%
-            </Text>
-            <Text size="xs" c="dimmed">
-              Tráfico Móvil
-            </Text>
-          </Stack>
-        </Group>
-
         <Group gap="xs">
           <ThemeIcon size="md" variant="light" color="teal">
             <IconChartBar size={16} />

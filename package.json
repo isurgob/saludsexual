@@ -1,5 +1,5 @@
 {
-  "name": "iSUR",
+  "name": "isur-comodoro",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -35,6 +35,8 @@
     "@tiptap/pm": "^3.3.1",
     "@tiptap/react": "^3.3.1",
     "@tiptap/starter-kit": "^3.3.1",
+    "axios": "^1.13.1",
+    "cheerio": "^1.1.2",
     "crypto": "^1.0.1",
     "dayjs": "^1.11.18",
     "env-cmd": "^10.1.0",

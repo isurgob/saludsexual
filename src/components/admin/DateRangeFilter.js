@@ -1,4 +1,4 @@
-import React, { useState, forwardRef } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import {
   Group,
   Button,
@@ -28,16 +28,48 @@ const DateRangeFilter = forwardRef(({
   disabled = false
 }, ref) => {
   const [opened, setOpened] = useState(false);
-  const [tempStartDate, setTempStartDate] = useState(startDate);
-  const [tempEndDate, setTempEndDate] = useState(endDate);
+  // Inicializar con fechas válidas
+  const [tempStartDate, setTempStartDate] = useState(() => {
+    if (!startDate) return null;
+    return startDate instanceof Date ? startDate : new Date(startDate);
+  });
+  const [tempEndDate, setTempEndDate] = useState(() => {
+    if (!endDate) return null;
+    return endDate instanceof Date ? endDate : new Date(endDate);
+  });
 
+  // Sincronizar fechas temporales cuando cambien las props
+  useEffect(() => {
+    if (startDate) {
+      const validStart = startDate instanceof Date ? startDate : new Date(startDate);
+      if (!isNaN(validStart.getTime())) {
+        setTempStartDate(validStart);
+      }
+    }
+  }, [startDate]);
 
- 
+  useEffect(() => {
+    if (endDate) {
+      const validEnd = endDate instanceof Date ? endDate : new Date(endDate);
+      if (!isNaN(validEnd.getTime())) {
+        setTempEndDate(validEnd);
+      }
+    }
+  }, [endDate]);
 
   const handleApply = () => {
     if (tempStartDate && tempEndDate) {
-      onDateChange(tempStartDate, tempEndDate);
-      setOpened(false);
+      // Asegurar que sean objetos Date válidos antes de enviarlos
+      const start = tempStartDate instanceof Date ? tempStartDate : new Date(tempStartDate);
+      const end = tempEndDate instanceof Date ? tempEndDate : new Date(tempEndDate);
+      
+      // Verificar que las fechas sean válidas
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        onDateChange(start, end);
+        setOpened(false);
+      } else {
+        console.error('Invalid dates in handleApply:', { tempStartDate, tempEndDate });
+      }
     }
   };
 
@@ -51,13 +83,27 @@ const DateRangeFilter = forwardRef(({
   const formatDateRange = () => {
     if (!startDate || !endDate) return 'Seleccionar fechas';
     
+    // Asegurar que sean objetos Date válidos
+    const start = startDate instanceof Date ? startDate : new Date(startDate);
+    const end = endDate instanceof Date ? endDate : new Date(endDate);
+    
+    // Verificar que las fechas sean válidas
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return 'Fechas inválidas';
+    }
+    
     const options = { 
       day: '2-digit', 
       month: '2-digit', 
       year: 'numeric' 
     };
     
-    return `${startDate.toLocaleDateString('es-ES', options)} - ${endDate.toLocaleDateString('es-ES', options)}`;
+    try {
+      return `${start.toLocaleDateString('es-ES', options)} - ${end.toLocaleDateString('es-ES', options)}`;
+    } catch (error) {
+      console.error('Error formatting dates:', error, { startDate, endDate });
+      return 'Error en fechas';
+    }
   };
 
   const isActive = startDate && endDate;
@@ -100,8 +146,10 @@ const DateRangeFilter = forwardRef(({
             if (!disabled) {
               // Sincronizar fechas temporales con las actuales al abrir
               if (!opened) {
-                setTempStartDate(startDate);
-                setTempEndDate(endDate);
+                const validStart = startDate instanceof Date ? startDate : (startDate ? new Date(startDate) : null);
+                const validEnd = endDate instanceof Date ? endDate : (endDate ? new Date(endDate) : null);
+                setTempStartDate(validStart);
+                setTempEndDate(validEnd);
               }
               setOpened((o) => !o);
             }
@@ -133,54 +181,7 @@ const DateRangeFilter = forwardRef(({
               )}
             </Group>
 
-            {/* Rangos predefinidos */}
-            <Box>
-              <Text size="xs" mb="xs" c="dimmed">Rangos rápidos:</Text>
-              <Group gap="xs">
-                <Button
-                  variant="light"
-                  size="xs"
-                  disabled={disabled}
-                  onClick={() => {
-                    const end = new Date();
-                    const start = new Date();
-                    start.setDate(start.getDate() - 7);
-                    setTempStartDate(start);
-                    setTempEndDate(end);
-                  }}
-                >
-                  Últimos 7 días
-                </Button>
-                <Button
-                  variant="light"
-                  size="xs"
-                  disabled={disabled}
-                  onClick={() => {
-                    const end = new Date();
-                    const start = new Date();
-                    start.setDate(start.getDate() - 30);
-                    setTempStartDate(start);
-                    setTempEndDate(end);
-                  }}
-                >
-                  Últimos 30 días
-                </Button>
-                <Button
-                  variant="light"
-                  size="xs"
-                  disabled={disabled}
-                  onClick={() => {
-                    const end = new Date();
-                    const start = new Date();
-                    start.setDate(start.getDate() - 90);
-                    setTempStartDate(start);
-                    setTempEndDate(end);
-                  }}
-                >
-                  Últimos 90 días
-                </Button>
-              </Group>
-            </Box>
+
  
             {/* Selectores de fecha personalizados */}
             <Stack gap="sm">

@@ -1,4 +1,4 @@
-import { getArticulos, createArticulo } from '../../service/articulosService.js';
+import { getArticulos, createArticulo } from '../../services/articulosService.js';
 
 // API route para CRUD de artículos
 export default async function handler(req, res) {

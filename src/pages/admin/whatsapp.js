@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 import {
   Container,
   Title,
@@ -24,8 +24,8 @@ import {
   Code,
   Divider,
   Timeline,
-  Avatar
-} from '@mantine/core';
+  Avatar,
+} from "@mantine/core";
 import {
   IconArrowLeft,
   IconRefresh,
@@ -42,44 +42,40 @@ import {
   IconExternalLink,
   IconMessage,
   IconUser,
-  IconCalendar
-} from '@tabler/icons-react';
-import LoadingScreen from '../../components/LoadingScreen';
+  IconCalendar,
+} from "@tabler/icons-react";
+import LoadingScreen from "../../components/LoadingScreen";
 
 export default function WhatsAppAdmin() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  
+
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messageHistory, setMessageHistory] = useState([]);
   const [sendMessageModal, setSendMessageModal] = useState(false);
-  const [newMessage, setNewMessage] = useState('');
-  const [targetPhone, setTargetPhone] = useState('');
+  const [newMessage, setNewMessage] = useState("");
+  const [targetPhone, setTargetPhone] = useState("");
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
   // Verificar autenticación y permisos
   useEffect(() => {
-    if (status === 'loading') return;
+    if (status === "loading") return;
 
-    if (status === 'unauthenticated') {
-      console.log('❌ Usuario no autenticado, redirigiendo a login');
-      router.push('/login');
+    if (status === "unauthenticated") {
+      router.push("/login");
       return;
     }
 
     if (session?.user) {
-      console.log('✅ Usuario autenticado:', session.user);
-      
       if (session.user.role !== 1 && session.user.role !== 2) {
-        console.log('⚠️ Usuario sin permisos adecuados');
-        router.push('/login?error=insufficient_permissions');
+        router.push("/login?error=insufficient_permissions");
         return;
       }
-      
+
       loadData();
     }
   }, [session, status]);
@@ -88,17 +84,17 @@ export default function WhatsAppAdmin() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Cargar estadísticas de WhatsApp
-      const response = await fetch('/api/whatsapp/stats?days=30');
-      
+      const response = await fetch("/api/whatsapp/stats?days=30");
+
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
           setStats(result.data.stats);
           setConversations(result.data.conversations);
         } else {
-          throw new Error(result.error || 'Error desconocido');
+          throw new Error(result.error || "Error desconocido");
         }
       } else {
         // Si las tablas no existen aún, usar datos en cero
@@ -109,16 +105,15 @@ export default function WhatsAppAdmin() {
             inbound_messages: 0,
             outbound_messages: 0,
             delivered_messages: 0,
-            avg_message_length: 0
+            avg_message_length: 0,
           });
           setConversations([]);
         } else {
           throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
       }
-      
     } catch (error) {
-      console.error('Error loading WhatsApp data:', error);
+      console.error("Error loading WhatsApp data:", error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -128,19 +123,18 @@ export default function WhatsAppAdmin() {
   const initializeTables = async () => {
     try {
       setRefreshing(true);
-      const response = await fetch('/api/whatsapp/init-tables', {
-        method: 'POST'
+      const response = await fetch("/api/whatsapp/init-tables", {
+        method: "POST",
       });
-      
+
       if (response.ok) {
         const result = await response.json();
-        console.log('Tablas inicializadas:', result);
         await loadData();
       } else {
-        throw new Error('Error inicializando tablas');
+        throw new Error("Error inicializando tablas");
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       setError(error.message);
     } finally {
       setRefreshing(false);
@@ -151,40 +145,36 @@ export default function WhatsAppAdmin() {
     if (!newMessage.trim() || !targetPhone.trim()) return;
 
     try {
-      console.log('Enviando mensaje de prueba:', { to: targetPhone, message: newMessage });
-      
-      const response = await fetch('/api/whatsapp/send-message', {
-        method: 'POST',
+      const response = await fetch("/api/whatsapp/send-message", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           to: targetPhone,
-          message: newMessage
-        })
+          message: newMessage,
+        }),
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
-        console.log('Mensaje enviado correctamente:', result);
         setSendMessageModal(false);
-        setNewMessage('');
-        setTargetPhone('');
-        
+        setNewMessage("");
+        setTargetPhone("");
+
         // Recargar datos después de enviar
         await loadData();
       } else {
-        throw new Error(result.details || result.error || 'Error desconocido');
+        throw new Error(result.details || result.error || "Error desconocido");
       }
-      
     } catch (error) {
-      console.error('Error enviando mensaje:', error);
+      console.error("Error enviando mensaje:", error);
       setError(error.message);
     }
   };
 
-  if (status === 'loading' || loading) {
+  if (status === "loading" || loading) {
     return (
       <LoadingScreen
         message="Cargando administración de WhatsApp..."
@@ -197,9 +187,9 @@ export default function WhatsAppAdmin() {
   if (error) {
     return (
       <Container size="lg" py="xl">
-        <Alert 
-          icon={<IconX size={16} />} 
-          title="Error al cargar datos de WhatsApp" 
+        <Alert
+          icon={<IconX size={16} />}
+          title="Error al cargar datos de WhatsApp"
           color="red"
           variant="light"
         >
@@ -208,7 +198,11 @@ export default function WhatsAppAdmin() {
             <Button size="sm" onClick={loadData}>
               Reintentar
             </Button>
-            <Button variant="light" size="sm" onClick={() => router.push('/admin/dashboard')}>
+            <Button
+              variant="light"
+              size="sm"
+              onClick={() => router.push("/admin/dashboard")}
+            >
               Volver al Dashboard
             </Button>
           </Group>
@@ -226,13 +220,16 @@ export default function WhatsAppAdmin() {
             <ActionIcon
               variant="light"
               size="lg"
-              onClick={() => router.push('/admin/dashboard')}
+              onClick={() => router.push("/admin/dashboard")}
             >
               <IconArrowLeft size={18} />
             </ActionIcon>
             <Box>
               <Title order={1} size="h2">
-                <IconBrandWhatsapp size={32} style={{ marginRight: 8, color: '#25D366' }} />
+                <IconBrandWhatsapp
+                  size={32}
+                  style={{ marginRight: 8, color: "#25D366" }}
+                />
                 Administración WhatsApp
               </Title>
               <Text c="dimmed" size="sm">
@@ -240,7 +237,7 @@ export default function WhatsAppAdmin() {
               </Text>
             </Box>
           </Group>
-          
+
           <Group gap="sm">
             <Button
               variant="light"
@@ -271,65 +268,98 @@ export default function WhatsAppAdmin() {
 
       {/* Estadísticas */}
       <Paper withBorder p="lg" mb="md">
-        <Title order={2} size="h3" mb="md">📊 Estadísticas de WhatsApp</Title>
+        <Title order={2} size="h3" mb="md">
+          📊 Estadísticas de WhatsApp
+        </Title>
         <SimpleGrid cols={{ base: 2, md: 4 }} spacing="lg">
           <Card shadow="sm" p="lg" radius="md" withBorder bg="green.0">
             <Group justify="space-between" mb="xs">
-              <Text size="sm" fw={600} c="green">Usuarios Totales</Text>
+              <Text size="sm" fw={600} c="green">
+                Usuarios Totales
+              </Text>
               <ThemeIcon variant="light" color="green" size="sm">
                 <IconUsers size={16} />
               </ThemeIcon>
             </Group>
-            <Text fw={700} size="xl">{stats?.total_users || 0}</Text>
-            <Text size="xs" c="dimmed">Conversaciones únicas</Text>
+            <Text fw={700} size="xl">
+              {stats?.total_users || 0}
+            </Text>
+            <Text size="xs" c="dimmed">
+              Conversaciones únicas
+            </Text>
           </Card>
 
           <Card shadow="sm" p="lg" radius="md" withBorder bg="blue.0">
             <Group justify="space-between" mb="xs">
-              <Text size="sm" fw={600} c="blue">Mensajes Totales</Text>
+              <Text size="sm" fw={600} c="blue">
+                Mensajes Totales
+              </Text>
               <ThemeIcon variant="light" color="blue" size="sm">
                 <IconMessageCircle size={16} />
               </ThemeIcon>
             </Group>
-            <Text fw={700} size="xl">{stats?.total_messages || 0}</Text>
-            <Text size="xs" c="dimmed">Enviados y recibidos</Text>
+            <Text fw={700} size="xl">
+              {stats?.total_messages || 0}
+            </Text>
+            <Text size="xs" c="dimmed">
+              Enviados y recibidos
+            </Text>
           </Card>
 
           <Card shadow="sm" p="lg" radius="md" withBorder bg="orange.0">
             <Group justify="space-between" mb="xs">
-              <Text size="sm" fw={600} c="orange">Mensajes Entrantes</Text>
+              <Text size="sm" fw={600} c="orange">
+                Mensajes Entrantes
+              </Text>
               <ThemeIcon variant="light" color="orange" size="sm">
                 <IconMessage size={16} />
               </ThemeIcon>
             </Group>
-            <Text fw={700} size="xl">{stats?.inbound_messages || 0}</Text>
-            <Text size="xs" c="dimmed">De usuarios</Text>
+            <Text fw={700} size="xl">
+              {stats?.inbound_messages || 0}
+            </Text>
+            <Text size="xs" c="dimmed">
+              De usuarios
+            </Text>
           </Card>
 
           <Card shadow="sm" p="lg" radius="md" withBorder bg="grape.0">
             <Group justify="space-between" mb="xs">
-              <Text size="sm" fw={600} c="grape">Entregados</Text>
+              <Text size="sm" fw={600} c="grape">
+                Entregados
+              </Text>
               <ThemeIcon variant="light" color="grape" size="sm">
                 <IconCheck size={16} />
               </ThemeIcon>
             </Group>
-            <Text fw={700} size="xl">{stats?.delivered_messages || 0}</Text>
-            <Text size="xs" c="dimmed">Confirmados</Text>
+            <Text fw={700} size="xl">
+              {stats?.delivered_messages || 0}
+            </Text>
+            <Text size="xs" c="dimmed">
+              Confirmados
+            </Text>
           </Card>
         </SimpleGrid>
       </Paper>
 
       {/* Configuración del Webhook */}
       <Paper withBorder p="lg" mb="md">
-        <Title order={2} size="h3" mb="md">⚙️ Configuración del Webhook</Title>
-        
-        <Alert icon={<IconSettings size={16} />} title="URL del Webhook" mb="md">
-          <Text size="sm" mb="xs">Configura esta URL en tu Meta App Dashboard:</Text>
+        <Title order={2} size="h3" mb="md">
+          ⚙️ Configuración del Webhook
+        </Title>
+
+        <Alert
+          icon={<IconSettings size={16} />}
+          title="URL del Webhook"
+          mb="md"
+        >
+          <Text size="sm" mb="xs">
+            Configura esta URL en tu Meta App Dashboard:
+          </Text>
           <Code block>
-            {typeof window !== 'undefined' 
+            {typeof window !== "undefined"
               ? `${window.location.origin}/api/whatsapp/webhook`
-              : 'https://tu-dominio.com/api/whatsapp/webhook'
-            }
+              : "https://tu-dominio.com/api/whatsapp/webhook"}
           </Code>
           <Text size="xs" c="dimmed" mt="xs">
             Asegúrate de configurar las variables de entorno correctamente
@@ -338,41 +368,65 @@ export default function WhatsAppAdmin() {
 
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
           <Card withBorder p="md">
-            <Title order={4} size="h5" mb="sm">🔐 Variables Requeridas</Title>
+            <Title order={4} size="h5" mb="sm">
+              🔐 Variables Requeridas
+            </Title>
             <Stack gap="xs">
               <Group justify="space-between">
                 <Text size="sm">WHATSAPP_ACCESS_TOKEN</Text>
-                <Badge color={process.env.WHATSAPP_ACCESS_TOKEN ? 'green' : 'red'} size="sm">
-                  {process.env.WHATSAPP_ACCESS_TOKEN ? 'Configurado' : 'Faltante'}
+                <Badge
+                  color={process.env.WHATSAPP_ACCESS_TOKEN ? "green" : "red"}
+                  size="sm"
+                >
+                  {process.env.WHATSAPP_ACCESS_TOKEN
+                    ? "Configurado"
+                    : "Faltante"}
                 </Badge>
               </Group>
               <Group justify="space-between">
                 <Text size="sm">WHATSAPP_PHONE_NUMBER_ID</Text>
-                <Badge color={process.env.WHATSAPP_PHONE_NUMBER_ID ? 'green' : 'red'} size="sm">
-                  {process.env.WHATSAPP_PHONE_NUMBER_ID ? 'Configurado' : 'Faltante'}
+                <Badge
+                  color={process.env.WHATSAPP_PHONE_NUMBER_ID ? "green" : "red"}
+                  size="sm"
+                >
+                  {process.env.WHATSAPP_PHONE_NUMBER_ID
+                    ? "Configurado"
+                    : "Faltante"}
                 </Badge>
               </Group>
               <Group justify="space-between">
                 <Text size="sm">WHATSAPP_VERIFY_TOKEN</Text>
-                <Badge color={process.env.WHATSAPP_VERIFY_TOKEN ? 'green' : 'red'} size="sm">
-                  {process.env.WHATSAPP_VERIFY_TOKEN ? 'Configurado' : 'Faltante'}
+                <Badge
+                  color={process.env.WHATSAPP_VERIFY_TOKEN ? "green" : "red"}
+                  size="sm"
+                >
+                  {process.env.WHATSAPP_VERIFY_TOKEN
+                    ? "Configurado"
+                    : "Faltante"}
                 </Badge>
               </Group>
             </Stack>
           </Card>
 
           <Card withBorder p="md">
-            <Title order={4} size="h5" mb="sm">📚 Guía de Configuración</Title>
+            <Title order={4} size="h5" mb="sm">
+              📚 Guía de Configuración
+            </Title>
             <Stack gap="xs">
               <Text size="sm">1. Ve a Meta App Dashboard</Text>
               <Text size="sm">2. Agrega WhatsApp Product</Text>
               <Text size="sm">3. Configura el webhook</Text>
               <Text size="sm">4. Agrega las variables de entorno</Text>
-              <Button 
-                size="xs" 
-                variant="light" 
+              <Button
+                size="xs"
+                variant="light"
                 leftSection={<IconExternalLink size={14} />}
-                onClick={() => window.open('https://developers.facebook.com/docs/whatsapp/cloud-api/get-started', '_blank')}
+                onClick={() =>
+                  window.open(
+                    "https://developers.facebook.com/docs/whatsapp/cloud-api/get-started",
+                    "_blank"
+                  )
+                }
               >
                 Ver Documentación
               </Button>
@@ -384,7 +438,9 @@ export default function WhatsAppAdmin() {
       {/* Conversaciones Recientes */}
       <Paper withBorder p="lg">
         <Group justify="space-between" mb="md">
-          <Title order={2} size="h3">💬 Conversaciones Recientes</Title>
+          <Title order={2} size="h3">
+            💬 Conversaciones Recientes
+          </Title>
           <Badge variant="light" color="blue">
             {conversations.length} conversaciones
           </Badge>
@@ -412,7 +468,7 @@ export default function WhatsAppAdmin() {
                           <IconUser size={16} />
                         </Avatar>
                         <Text size="sm" fw={500}>
-                          {conversation.user_name || 'Usuario Anónimo'}
+                          {conversation.user_name || "Usuario Anónimo"}
                         </Text>
                       </Group>
                     </Table.Td>
@@ -423,25 +479,27 @@ export default function WhatsAppAdmin() {
                     </Table.Td>
                     <Table.Td>
                       <Text size="sm" lineClamp={1}>
-                        {conversation.last_message || 'Sin mensajes'}
+                        {conversation.last_message || "Sin mensajes"}
                       </Text>
                     </Table.Td>
                     <Table.Td>
-                      <Badge 
-                        size="sm" 
-                        color={conversation.is_active ? 'green' : 'gray'}
+                      <Badge
+                        size="sm"
+                        color={conversation.is_active ? "green" : "gray"}
                       >
-                        {conversation.is_active ? 'Activa' : 'Inactiva'}
+                        {conversation.is_active ? "Activa" : "Inactiva"}
                       </Badge>
                     </Table.Td>
                     <Table.Td>
                       <Text size="xs" c="dimmed">
-                        {new Date(conversation.updated_at).toLocaleDateString('es-ES')}
+                        {new Date(conversation.updated_at).toLocaleDateString(
+                          "es-ES"
+                        )}
                       </Text>
                     </Table.Td>
                     <Table.Td>
-                      <Button 
-                        size="xs" 
+                      <Button
+                        size="xs"
                         variant="light"
                         onClick={() => setSelectedConversation(conversation)}
                       >
@@ -456,9 +514,12 @@ export default function WhatsAppAdmin() {
         ) : (
           <Box ta="center" py="xl">
             <IconMessageCircle size={48} color="gray" />
-            <Title order={4} c="dimmed" mt="md">No hay conversaciones aún</Title>
+            <Title order={4} c="dimmed" mt="md">
+              No hay conversaciones aún
+            </Title>
             <Text size="sm" c="dimmed">
-              Las conversaciones de WhatsApp aparecerán aquí una vez que los usuarios comiencen a chatear
+              Las conversaciones de WhatsApp aparecerán aquí una vez que los
+              usuarios comiencen a chatear
             </Text>
           </Box>
         )}
@@ -490,7 +551,10 @@ export default function WhatsAppAdmin() {
             <Button variant="light" onClick={() => setSendMessageModal(false)}>
               Cancelar
             </Button>
-            <Button onClick={sendTestMessage} disabled={!newMessage.trim() || !targetPhone.trim()}>
+            <Button
+              onClick={sendTestMessage}
+              disabled={!newMessage.trim() || !targetPhone.trim()}
+            >
               Enviar
             </Button>
           </Group>

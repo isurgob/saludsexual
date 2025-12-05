@@ -9,13 +9,11 @@ export function useCentrosSalud() {
 
   // Función para obtener centros de salud con manejo global de errores
   const fetchCentros = useCallback(async () => {
-    console.log('🔄 Iniciando fetch de centros de salud...');
     setLoading(true);
     setError(null);
     
     const result = await executeApiCall(async () => {
       const response = await fetch('/api/centros-salud');
-      console.log('📡 Respuesta del API:', response.status, response.statusText);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -24,9 +22,6 @@ export function useCentrosSalud() {
       }
       
       const data = await response.json();
-      console.log('✅ Datos recibidos:', data.length, 'centros');
-      console.log('📋 Primer centro como ejemplo:', data[0]);
-      
       return data;
     });
 
@@ -37,7 +32,6 @@ export function useCentrosSalud() {
     }
     
     setLoading(false);
-    console.log('🏁 Fetch completado');
   }, [executeApiCall]);
 
   useEffect(() => {

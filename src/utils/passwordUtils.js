@@ -217,9 +217,9 @@ function md5Pure(str) {
  * @returns {string} Hash MD5 compatible con el backend
  */
 export function hashPassword(password, email) {
-  // Same method as backend: MD5(password + email + salt)
+  // Mismo método que en el backend: MD5(contraseña + email + salt)
   const normalizedEmail = email.toLowerCase().trim();
-  const saltedPassword = password + normalizedEmail + 'secure_salt_2024';
+  const saltedPassword = password + normalizedEmail + 'isur_salt_2024';
   return md5Pure(saltedPassword);
 }
 

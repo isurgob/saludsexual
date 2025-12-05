@@ -1,4 +1,4 @@
-import { getServiciosUnicos } from '../../service/metadataService.js';
+import { getServiciosUnicos } from '../../services/metadataService.js';
 
 export default async function handler(req, res) {
   // Solo permitir método GET
@@ -9,12 +9,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('📡 API: Obteniendo servicios únicos...');
-    
     // Obtener servicios desde la base de datos
     const servicios = await getServiciosUnicos();
-    
-    console.log(`✅ API: Se obtuvieron ${servicios.length} servicios`);
     
     // Transformar datos para el frontend (agregar colores por defecto)
     const serviciosTransformados = servicios.map((servicio, index) => ({

@@ -1,107 +1,94 @@
-import openai from '@/config/openai';
+/**
+ * API Handler SIMPLE - Solo consulta Storage del OpenAI Assistant
+ * Sistema completamente nuevo sin funciones complejas
+ */
 
-// Función para limpiar referencias de fuentes de OpenAI
-function cleanSourceReferences(text) {
-  if (!text) return text;
-  
-  let cleaned = text;
-  
-  // Patrones de referencias más comunes:
-  // 【14:0†source】, 【1†source】, 【2:1†source】
-  cleaned = cleaned.replace(/【[^】]*†[^】]*】/g, '');
-  
-  // Patrones con corchetes normales: [14:0†source], [1†source]
-  cleaned = cleaned.replace(/\[[^\]]*†[^\]]*\]/g, '');
-  
-  // Patrones más generales con símbolos especiales
-  cleaned = cleaned.replace(/【[^】]*】/g, '');
-  cleaned = cleaned.replace(/\[[^\]]*†[^\]]*\]/g, '');
-  
-  // Limpiar espacios múltiples y saltos de línea extra
-  cleaned = cleaned.replace(/\s+/g, ' ');
-  cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n');
-  cleaned = cleaned.trim();
-  
-  return cleaned;
-}
+import { simpleChat } from '@/utils/simpleChatSystem';
+
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Solo se permite POST' });
-  }
-
-  try {
-    const { message, threadId } = req.body;
-    
-    console.log('📨 Mensaje recibido:', message);
-    console.log('🔗 Thread ID:', threadId);
-
-    const ASSISTANT_ID = process.env.OPENAI_ASSISTANT_ID;
-    
-    if (!ASSISTANT_ID) {
-      throw new Error('OPENAI_ASSISTANT_ID no está configurado');
-    }
-
-    let currentThreadId = threadId;
-
-    // Crear thread si no existe
-    if (!currentThreadId) {
-      console.log('🆕 Creando nuevo thread...');
-      const thread = await openai.beta.threads.create();
-      currentThreadId = thread.id;
-      console.log('✅ Thread creado:', currentThreadId);
-    }
-
-    // Agregar mensaje del usuario al thread
-    console.log('✍️ Agregando mensaje al thread...');
-    await openai.beta.threads.messages.create(currentThreadId, {
-      role: 'user',
-      content: message,
-    });
-
-    // Crear y ejecutar run con polling automático
-    console.log('▶️ Creando run...');
-    const run = await openai.beta.threads.runs.createAndPoll(currentThreadId, {
-      assistant_id: ASSISTANT_ID,
-    });
-
-    console.log('🔄 Run completado con estado:', run.status);
-
-    if (run.status === 'completed') {
-      // Obtener los mensajes del thread
-      const messages = await openai.beta.threads.messages.list(currentThreadId);
-      
-      // Encontrar la respuesta del asistente
-      const assistantMessage = messages.data.find(
-        msg => msg.role === 'assistant' && msg.run_id === run.id
-      );
-
-      if (assistantMessage && assistantMessage.content[0]) {
-        const originalResponse = assistantMessage.content[0].text.value;
-        const response = cleanSourceReferences(originalResponse);
-        
-        // Log para debugging si se encontraron referencias
-        if (originalResponse !== response) {
-          console.log('🧹 Referencias de fuentes eliminadas');
-          console.log('📝 Diferencia de caracteres:', originalResponse.length - response.length);
-        }
-        
-        console.log('✅ Respuesta obtenida y limpiada');
-        
-        return res.status(200).json({
-          response,
-          threadId: currentThreadId,
+    // Solo permitir POST
+    if (req.method !== 'POST') {
+        return res.status(405).json({ 
+            error: 'Método no permitido',
+            allowed: ['POST']
         });
-      }
     }
 
-    throw new Error(`Run falló con estado: ${run.status}`);
+    const startTime = Date.now();
 
-  } catch (error) {
-    console.error('❌ Error:', error);
-    return res.status(500).json({ 
-      error: 'Error interno del servidor',
-      details: error.message 
-    });
-  }
+    try {
+        // Validar datos de entrada
+        const { message, sessionId } = req.body;
+        
+        console.log('📥 [API DEBUG] Solicitud recibida:');
+        console.log('📥 [API DEBUG] SessionId:', sessionId || 'NO_PRESENTE');
+        console.log('📥 [API DEBUG] Mensaje:', message?.substring(0, 50) || 'VACIO');
+        
+        if (!message?.trim()) {
+            return res.status(400).json({
+                success: false,
+                error: 'El mensaje no puede estar vacío',
+                processing_time_ms: Date.now() - startTime
+            });
+        }
+
+        if (!sessionId?.trim()) {
+            return res.status(400).json({
+                success: false,
+                error: 'SessionId es requerido',
+                processing_time_ms: Date.now() - startTime
+            });
+        }
+
+        // Consultar directamente al Assistant
+        console.log('🤖 [API DEBUG] Llamando a simpleChat con sessionId:', sessionId);
+        console.log('🧠 [API DEBUG] Estado actual de threads globales:', Object.keys(global.chatThreads || {}));
+        
+        const result = await simpleChat(message, sessionId);
+        
+        const processingTime = Date.now() - startTime;
+        
+        if (result.success) {
+            console.log('🚀 [API DEBUG] Respuesta exitosa - enviando al frontend:');
+            console.log('🚀 [API DEBUG] SessionId:', sessionId);
+            console.log('🚀 [API DEBUG] ThreadId:', result.threadId || 'NO_PRESENTE');
+            console.log('🚀 [API DEBUG] Source:', result.source);
+
+            return res.status(200).json({
+                success: true,
+                message: result.response,
+                sessionId: sessionId,
+                threadId: result.threadId,
+                timestamp: new Date().toISOString(),
+                processing_time_ms: processingTime,
+                status: 'completed',
+                source: result.source || 'openai_storage',
+                originalQuestion: result.originalQuestion,
+                improvedQuestion: result.improvedQuestion,
+                wasImproved: result.wasImproved,
+                isCourtesyWord: result.isCourtesyWord
+            });
+            
+        } else {
+            throw new Error(result.error || 'Error desconocido');
+        }
+
+    } catch (error) {
+        const processingTime = Date.now() - startTime;
+        console.error('❌ Error en chat simple:', {
+            error: error.message,
+            processing_time_ms: processingTime,
+            timestamp: new Date().toISOString()
+        });
+
+        return res.status(500).json({
+            success: false,
+            error: error.message,
+            message: 'Lo siento, hubo un error procesando tu consulta. Por favor intentá de nuevo.',
+            timestamp: new Date().toISOString(),
+            processing_time_ms: processingTime,
+            status: 'error'
+        });
+    }
 }

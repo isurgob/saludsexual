@@ -20,6 +20,7 @@ import {
   Divider,
   Anchor,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   IconMapPin,
   IconFilter,
@@ -292,10 +293,10 @@ const InteractiveMap = () => {
     );
 
 
-    // Aplicar filtro de servicios
+    // Aplicar filtro de servicios - Lógica AND (debe tener TODOS los servicios seleccionados)
     if (selectedServices.length > 0) {
       filtered = filtered.filter((center) =>
-        selectedServices.some(
+        selectedServices.every(
           (service) => center.servicios && center.servicios.includes(service)
         )
       );
@@ -338,23 +339,35 @@ const InteractiveMap = () => {
             setUserLocation({ lat, lng });
           } else {
             // Mostrar mensaje y centrar en Comodoro
-            alert(
-              "Tu ubicación está fuera de Comodoro Rivadavia. El mapa se centrará en la ciudad para mostrarte los servicios disponibles."
-            );
+            notifications.show({
+              title: 'Ubicación fuera del área',
+              message: 'Tu ubicación está fuera de Comodoro Rivadavia. El mapa se centrará en la ciudad para mostrarte los servicios disponibles.',
+              color: 'orange',
+              icon: '📍',
+              autoClose: 5000
+            });
             // No establecer userLocation para forzar el uso del centro de Comodoro
           }
         },
         (error) => {
           // En caso de error, centrar en Comodoro
-          alert(
-            "No se pudo obtener tu ubicación. El mapa se centrará en Comodoro Rivadavia."
-          );
+          notifications.show({
+            title: 'Error de geolocalización',
+            message: 'No se pudo obtener tu ubicación. El mapa se centrará en Comodoro Rivadavia.',
+            color: 'yellow',
+            icon: '⚠️',
+            autoClose: 4000
+          });
         }
       );
     } else {
-      alert(
-        "Tu navegador no soporta geolocalización. El mapa se centrará en Comodoro Rivadavia."
-      );
+      notifications.show({
+        title: 'Geolocalización no disponible',
+        message: 'Tu navegador no soporta geolocalización. El mapa se centrará en Comodoro Rivadavia.',
+        color: 'blue',
+        icon: 'ℹ️',
+        autoClose: 4000
+      });
     }
   };
 
@@ -424,7 +437,13 @@ const InteractiveMap = () => {
         setFilteredCenters(nearbyCenters);
         
         if (nearbyCenters.length === 0) {
-          alert(`No se encontraron centros de salud cerca de "${location.display_name.split(',')[0]}". Mostrando todos los centros disponibles.`);
+          notifications.show({
+            title: 'No hay centros cercanos',
+            message: `No se encontraron centros de salud cerca de "${location.display_name.split(',')[0]}". Mostrando todos los centros disponibles.`,
+            color: 'blue',
+            icon: '📍',
+            autoClose: 6000
+          });
           // Si no hay centros cercanos, mostrar todos
           const todosLosCentros = healthCenters.filter((center) =>
             isWithinComodoro(center.lat, center.lng)
@@ -450,7 +469,13 @@ const InteractiveMap = () => {
         setSearchedLocation(null);
         
         if (matchingCenters.length === 0) {
-          alert(`No se encontraron centros que coincidan con "${searchQuery}". Intenta con otro término de búsqueda.`);
+          notifications.show({
+            title: 'Sin resultados',
+            message: `No se encontraron centros que coincidan con "${searchQuery}". Intenta con otro término de búsqueda.`,
+            color: 'yellow',
+            icon: '🔍',
+            autoClose: 5000
+          });
         }
       }
     } catch (error) {
@@ -464,7 +489,13 @@ const InteractiveMap = () => {
         errorMessage = 'La búsqueda tardó demasiado. Intenta de nuevo.';
       }
       
-      alert(errorMessage);
+      notifications.show({
+        title: 'Error en la búsqueda',
+        message: errorMessage,
+        color: 'red',
+        icon: '❌',
+        autoClose: 5000
+      });
       
       // En caso de error, buscar por nombre como fallback
       const matchingCenters = healthCenters.filter(center => {
@@ -526,7 +557,13 @@ const InteractiveMap = () => {
   const openDirections = (center) => {
     // Verificar que el centro esté dentro de Comodoro antes de abrir direcciones
     if (!isWithinComodoro(center.lat, center.lng)) {
-      alert("Esta ubicación está fuera de Comodoro Rivadavia.");
+      notifications.show({
+        title: 'Ubicación fuera del área',
+        message: 'Esta ubicación está fuera de Comodoro Rivadavia.',
+        color: 'orange',
+        icon: '📍',
+        autoClose: 4000
+      });
       return;
     }
 
@@ -583,11 +620,11 @@ const InteractiveMap = () => {
  
 
   return (
-    <Container size="xl" py="xl" className={classes.container}>
-      <Stack gap="lg">
+    <Container size="xl" py="md" className={classes.container}>
+      <Stack gap="sm">
         {/* Search and Filters */}
-        <Card shadow="sm" padding="md" radius="md" withBorder className={classes.searchContainer}>
-          <Stack gap="md">
+        <Card shadow="sm" padding="sm" radius="md" withBorder className={classes.searchContainer}>
+          <Stack gap="xs">
             <div className={classes.searchGroup}>
               <TextInput
                 className={classes.searchInput}
@@ -620,6 +657,7 @@ const InteractiveMap = () => {
                   onClick={() => setFiltersOpen(true)}
                   radius="lg"
                   size="sm"
+                  className={classes.filterButton}
                   style={{ minHeight: '36px' }}
                 >
                   <span className={classes.hideOnMobile}>¿Qué servicio estás buscando?</span>
@@ -734,7 +772,7 @@ const InteractiveMap = () => {
               />
               ¿Qué podés encontrar en el mapa?
             </Text>
-            <Group gap="md" wrap="wrap">
+            <Group gap="xs" wrap="wrap">
               <Group gap="xs" align="center">
                 <Box
                   style={{
@@ -1002,8 +1040,8 @@ const InteractiveMap = () => {
         </Card>
 
         {/* Results List */}
-        <Card shadow="sm" padding="lg" radius="md" withBorder>
-          <Stack gap="md">
+        <Card shadow="sm" padding="md" radius="md" withBorder>
+          <Stack gap="xs">
             <Group justify="space-between">
               <Title order={3} className="section-title">
                 Centros encontrados ({filteredCenters.length})
@@ -1127,7 +1165,7 @@ const InteractiveMap = () => {
           zIndex: 1000,
         }}
       >
-        <Stack gap="lg">
+        <Stack gap="sm">
           <Box>
             <Text size="sm" fw={500} mb="xs">
               Tipo de servicios

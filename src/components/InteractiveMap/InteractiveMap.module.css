@@ -83,12 +83,15 @@
 /* Search bar responsive styles */
 .searchContainer {
   width: 100%;
+  border: 2px solid rgb(255, 179, 204) !important;
+  margin-bottom: 0 !important; /* Sin margen inferior */
+  padding: 8px !important; /* Reducir padding interno aún más */
 }
 
 .searchGroup {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -99,7 +102,7 @@
 
 .searchActions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   flex-shrink: 0;
 }

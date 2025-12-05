@@ -93,6 +93,139 @@ html, body {
   height: 100%;
 }
 
+/* iOS Safari Navbar Force Visibility - Ultra Aggressive Fix */
+[data-navbar-header="true"] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  z-index: 9999 !important;
+  background: white !important;
+  background-color: white !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  border-bottom: 1px solid #e9ecef !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  -webkit-transform: translate3d(0, 0, 0) !important;
+  transform: translate3d(0, 0, 0) !important;
+  -webkit-backface-visibility: hidden !important;
+  backface-visibility: hidden !important;
+  isolation: isolate !important;
+  contain: layout style paint !important;
+}
+
+/* iOS Safari specific - Force navbar visibility */
+@supports (-webkit-touch-callout: none) {
+  [data-navbar-header="true"] {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    z-index: 9999 !important;
+    background: white !important;
+    background-color: white !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    transform: translate3d(0, 0, 0) !important;
+    -webkit-backface-visibility: hidden !important;
+    backface-visibility: hidden !important;
+    isolation: isolate !important;
+  }
+}
+
+/* WebKit specific - Additional layer */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  [data-navbar-header="true"] {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    height: 60px !important;
+    z-index: 9999 !important;
+    background: white !important;
+    background-color: white !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
+  }
+}
+
+/* Body padding to compensate for fixed navbar */
+body {
+  padding-top: 60px !important;
+}
+
+/* Emergency iOS Safari Fix - Ultra Force Navbar Content */
+.navbar-header * {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: flex !important;
+  position: relative !important;
+  z-index: 10000 !important;
+}
+
+.navbar-header img {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 10001 !important;
+}
+
+.navbar-header button {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 10002 !important;
+  background-color: white !important;
+}
+
+.navbar-header a {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 10001 !important;
+}
+
+/* Force all navbar children to be visible on iOS */
+@supports (-webkit-touch-callout: none) {
+  .navbar-header,
+  .navbar-header *,
+  .navbar-header img,
+  .navbar-header button,
+  .navbar-header a,
+  .navbar-header div {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: flex !important;
+    position: relative !important;
+    z-index: 10000 !important;
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
+  }
+  
+  .navbar-header img {
+    display: block !important;
+  }
+}
+
 /* Headings use Montserrat */
 h1, h2, h3, h4, h5, h6,
 .heading,
@@ -215,6 +348,13 @@ p,
   color: var(--color-primary) !important;
   font-family: var(--font-primary);
   font-weight: 800;
+}
+
+/* Reducir interlineado en móviles para el título principal */
+@media (max-width: 768px) {
+  .page-title {
+    line-height: 1.1 !important; /* Interlineado más compacto */
+  }
 }
 
 /* Títulos de sección importantes */
@@ -493,6 +633,12 @@ p,
 
 .mantine-AppShell-header {
   z-index: 1000 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  background-color: white !important;
 }
 
 /* Fix para Drawer y Modal de Mantine - deben aparecer por encima del navbar */
@@ -597,12 +743,15 @@ p,
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    width: 100% !important;
-    z-index: 100 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    z-index: 1000 !important;
     -webkit-transform: translate3d(0, 0, 0) !important;
     transform: translate3d(0, 0, 0) !important;
     -webkit-backface-visibility: hidden !important;
     backface-visibility: hidden !important;
+    background-color: white !important;
+    isolation: isolate !important;
   }
   
   .mantine-AppShell-main {
@@ -613,12 +762,13 @@ p,
   
   /* Fix for burger menu visibility */
   .mantine-Burger-root {
-    -webkit-transform: translateZ(0) !important;
-    transform: translateZ(0) !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    transform: translate3d(0, 0, 0) !important;
     -webkit-tap-highlight-color: rgba(27, 67, 107, 0.2) !important;
     -webkit-touch-callout: none !important;
     touch-action: manipulation !important;
-    z-index: 102 !important;
+    z-index: 1002 !important;
+    position: relative !important;
   }
 }
 
@@ -633,7 +783,82 @@ p,
   .mantine-AppShell-header {
     position: fixed !important;
     top: 0 !important;
-    width: 100% !important;
-    z-index: 100 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    z-index: 1000 !important;
+    background-color: white !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    transform: translate3d(0, 0, 0) !important;
+    isolation: isolate !important;
   }
+}
+
+/* iPhone X and newer safe area support */
+@supports (padding: max(0px)) {
+  .navbar-header,
+  [data-navbar-header] {
+    padding-left: max(1rem, env(safe-area-inset-left)) !important;
+    padding-right: max(1rem, env(safe-area-inset-right)) !important;
+  }
+}
+
+/* Force navbar visibility on iOS Safari */
+html,
+body {
+  position: relative !important;
+  overflow-x: hidden !important;
+}
+
+/* Navbar specific iOS fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 1) {
+  .navbar-header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    background-color: white !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    height: 60px !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    transform: translate3d(0, 0, 0) !important;
+  }
+}
+
+/* FLOATING CHAT BUTTON - Below navbar priority */
+.floating-chat-button,
+[data-floating-chat-button] {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 999 !important;
+  transform: translate3d(0, 0, 0) !important;
+  -webkit-transform: translate3d(0, 0, 0) !important;
+  pointer-events: auto !important;
+}
+
+/* Mobile specific overrides for floating chat */
+@media (max-width: 768px) {
+  .floating-chat-button,
+  [data-floating-chat-button] {
+    position: fixed !important;
+    bottom: 20px !important;
+    z-index: 10000 !important;
+    transform: translate3d(0, 0, 0) !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    transition: all 0.3s ease !important;
+  }
+}
+
+/* Ensure AppShell doesn't interfere with floating elements */
+.mantine-AppShell-root {
+  position: relative !important;
+}
+
+.mantine-AppShell-main {
+  position: relative !important;
+  z-index: 1 !important;
 }

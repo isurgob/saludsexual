@@ -95,15 +95,7 @@ export const useErrorHandler = () => {
     if (showNotification) {
       NotificationManager.apiError(error, customMessage);
     }
-    
-    // Log adicional para desarrollo
-    if (process.env.NODE_ENV === 'development') {
-      console.group('🚨 Error Details');
-      console.log('Type:', errorType);
-      console.log('Original Error:', error);
-      console.log('User Message:', notificationConfig.message);
-      console.groupEnd();
-    }
+       
     
     return {
       type: errorType,

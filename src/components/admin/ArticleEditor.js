@@ -18,6 +18,7 @@ import {
   Grid,
   ScrollArea
 } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import {
   IconPlus,
   IconTrash,
@@ -129,7 +130,8 @@ export default function ArticleEditor({ article, onSave, onCancel }) {
   // Función para agregar nueva sección
   const addSection = () => {
     const newSection = {
-      id: Date.now(), // ID temporal
+      id: null, // Null para secciones nuevas - la DB generará el ID
+      tempId: Date.now(), // ID temporal solo para React (identificación local)
       section_key: '',
       title: '',
       description: '',
@@ -157,8 +159,8 @@ export default function ArticleEditor({ article, onSave, onCancel }) {
 
     if (active.id !== over.id) {
       setSections((items) => {
-        const oldIndex = items.findIndex(item => (item.id || items.indexOf(item)) === active.id);
-        const newIndex = items.findIndex(item => (item.id || items.indexOf(item)) === over.id);
+        const oldIndex = items.findIndex(item => (item.id || item.tempId || items.indexOf(item)) === active.id);
+        const newIndex = items.findIndex(item => (item.id || item.tempId || items.indexOf(item)) === over.id);
 
         const newItems = arrayMove(items, oldIndex, newIndex);
         
@@ -175,12 +177,22 @@ export default function ArticleEditor({ article, onSave, onCancel }) {
   const handleSave = () => {
     // Validaciones simplificadas - solo campos editables
     if (!formData.title.trim()) {
-      alert('El título es obligatorio');
+      notifications.show({
+        title: 'Campo obligatorio',
+        message: 'El título es obligatorio',
+        color: 'red',
+        icon: <IconInfoCircle size={16} />
+      });
       return;
     }
 
     if (!formData.content.trim()) {
-      alert('El contenido es obligatorio');
+      notifications.show({
+        title: 'Campo obligatorio',
+        message: 'El contenido es obligatorio',
+        color: 'red',
+        icon: <IconInfoCircle size={16} />
+      });
       return;
     }
 
@@ -188,7 +200,12 @@ export default function ArticleEditor({ article, onSave, onCancel }) {
     for (let i = 0; i < sections.length; i++) {
       const section = sections[i];
       if (!section.section_key.trim() || !section.title.trim() || !section.content.trim()) {
-        alert(`La sección ${i + 1} tiene campos obligatorios vacíos`);
+        notifications.show({
+          title: 'Sección incompleta',
+          message: `La sección ${i + 1} tiene campos obligatorios vacíos`,
+          color: 'red',
+          icon: <IconInfoCircle size={16} />
+        });
         return;
       }
     }
@@ -207,6 +224,16 @@ export default function ArticleEditor({ article, onSave, onCancel }) {
         order_index: index
       }))
     };
+
+    // Notificación de éxito antes de enviar
+    notifications.show({
+      title: 'Validación exitosa',
+      message: 'Enviando artículo...',
+      color: 'blue',
+      loading: true,
+      autoClose: false,
+      id: 'saving-article'
+    });
 
     onSave(articleData);
   };
@@ -389,13 +416,13 @@ export default function ArticleEditor({ article, onSave, onCancel }) {
                 onDragEnd={handleSectionReorder}
               >
                 <SortableContext
-                  items={sections.map((section, index) => section.id || index)}
+                  items={sections.map((section, index) => section.id || section.tempId || index)}
                   strategy={verticalListSortingStrategy}
                 >
                   <Stack gap="md">
                     {sections.map((section, index) => (
                       <SortableSection
-                        key={section.id || index}
+                        key={section.id || section.tempId || index}
                         section={section}
                         index={index}
                         removeSection={removeSection}
@@ -489,7 +516,7 @@ function SortableSection({ section, index, removeSection, updateSection }) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: section.id || index });
+  } = useSortable({ id: section.id || section.tempId || index });
 
   // Editor TipTap para cada sección
   const sectionEditor = useEditor({
@@ -579,13 +606,7 @@ function SortableSection({ section, index, removeSection, updateSection }) {
           </Grid.Col>
         </Grid>
 
-        <Textarea
-          label="Descripción Breve"
-          placeholder="Descripción que aparece antes de expandir"
-          value={section.description}
-          onChange={(e) => updateSection(index, 'description', e.target.value)}
-          rows={2}
-        />
+        
 
         <Box>
           <Text size="sm" fw={500} mb="xs">

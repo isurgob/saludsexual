@@ -1,4 +1,17 @@
 // Utilidades para el chat
+let isChatLoading = false;
+
+// Estados globales del chat
+export const getChatLoadingState = () => isChatLoading;
+export const setChatLoadingState = (loading) => {
+  isChatLoading = loading;
+  // Disparar evento para notificar cambio de estado
+  const event = new CustomEvent('chatLoadingStateChanged', {
+    detail: { loading }
+  });
+  window.dispatchEvent(event);
+};
+
 export const openFloatingChat = () => {
   // Limpiar cualquier tema previo
   sessionStorage.removeItem('chatTopic');
@@ -8,17 +21,19 @@ export const openFloatingChat = () => {
 };
 
 export const openFloatingChatWithTopic = (topic) => {
-  // Guardar el tema en sessionStorage para que el chat lo pueda leer
-  const botMessage = `Veo que te interesa el tema de ${topic}, ¿qué te gustaría saber específicamente?`;
+  // Si ya hay una consulta en proceso, no hacer nada
+  if (isChatLoading) {
+    return;
+  }
+
+  // Guardar solo el tema en sessionStorage - el chat manejará el resto
   sessionStorage.setItem('chatTopic', topic);
-  sessionStorage.setItem('chatBotMessage', botMessage);
   
   // Disparar evento personalizado para abrir el chat flotante
   const event = new CustomEvent('openFloatingChat', {
     detail: {
       hasTopic: true,
-      topic: topic,
-      botMessage: botMessage
+      topic: topic
     }
   });
   window.dispatchEvent(event);

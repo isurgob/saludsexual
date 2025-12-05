@@ -62,11 +62,9 @@ export default async function handler(req, res) {
         .createHash('md5')
         .update(newPassword + user.correo.toLowerCase() + 'isur_salt_2024')
         .digest('hex');
-      console.log('🔒 Contraseña hasheada en backend para reset');
     } else {
       // La contraseña ya viene hasheada desde el frontend
       passwordHash = newPassword;
-      console.log('🔒 Contraseña ya hasheada desde frontend');
     }
     
     // Actualizar la contraseña y limpiar el token

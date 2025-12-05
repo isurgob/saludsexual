@@ -1,4 +1,4 @@
-import { getCentroById } from '../../service/centrosSaludService.js';
+import { getCentroById } from '../../services/centrosSaludService.js';
 import { query } from '../../config/db';
 
 // API route para obtener centros de salud con filtros

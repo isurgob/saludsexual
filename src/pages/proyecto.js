@@ -24,19 +24,23 @@ export default function Proyecto() {
 
         <Box>
           <Text size="lg" lh={1.6} mb="xl">
-            La plataforma digital desarrollada tiene por finalidad centralizar información confiable, facilitar el acceso a servicios de salud del Municipio de Comodoro Rivadavia a través de un mapa georreferenciado, y responder mediante un chatbot interactivo —disponible tanto en la web como en WhatsApp—consultas e inquietudes de las personas usuarias.
+            En julio de 2024, Comodoro Rivadavia se convirtió en el primer municipio de la Patagonia en adherir a la <strong>Declaración de París</strong>, una iniciativa impulsada por ONUSIDA que convoca a gobiernos locales de todo el mundo a unir esfuerzos para poner fin a la epidemia de VIH para el año 2030, promoviendo la equidad, la inclusión y el respeto por los derechos humanos.
           </Text>
 
           <Text size="lg" lh={1.6} mb="xl">
-            La iniciativa fue creada por la <strong>Secretaría de Salud del Municipio de Comodoro Rivadavia</strong> junto a la <strong>Agencia Comodoro Conocimiento</strong>, con el apoyo del <strong>Programa de las Naciones Unidas para el Desarrollo (PNUD) en Argentina</strong> y desarrollada por <strong>iSUR Empresa Consultora</strong>.
+            La adhesión representa un compromiso político y social del Municipio para fortalecer la prevención, detección temprana y acompañamiento de las personas que conviven con VIH y otras infecciones de transmisión sexual.
           </Text>
 
           <Text size="lg" lh={1.6} mb="xl">
-            Está orientada a fortalecer la respuesta local frente al VIH, las infecciones de transmisión sexual (ITS), las hepatitis virales y la tuberculosis.
+            Como parte de las acciones locales que se desprenden de este compromiso, desde la <strong>Secretaría de Salud Municipal</strong> junto a la <strong>Agencia Comodoro Conocimiento</strong>, con el apoyo del <strong>Programa de las Naciones Unidas para el Desarrollo (PNUD) en Argentina</strong>, se impulsó esta plataforma digital que reúne información confiable y facilita el acceso a los servicios de salud del Municipio de Comodoro Rivadavia mediante un mapa georreferenciado y un chatbot interactivo disponible en la web y en WhatsApp.
           </Text>
 
           <Text size="lg" lh={1.6} mb="xl">
-            Es una plataforma de código abierto, disponible en: <strong>XXXXXXX</strong>.
+            Esta herramienta digital busca acercar información confiable, orientación y recursos a toda la comunidad, fortaleciendo el acceso al cuidado de la salud sexual y reproductiva desde una perspectiva de derechos.
+          </Text>
+
+          <Text size="lg" lh={1.6} mb="xl">
+            Es una plataforma de código abierto, disponible en: <Text component="a" href="https://github.com/ChatBot-Comodoro/saludsexual" target="_blank" rel="noopener noreferrer" style={{ color: '#FF0048', textDecoration: 'underline' }}>https://github.com/ChatBot-Comodoro/saludsexual</Text>.
           </Text>
 
           <Text size="lg" lh={1.6} mb="md">
@@ -62,14 +66,7 @@ export default function Proyecto() {
         {/* Texto informativo */}
         <Box style={{ borderTop: "2px solid #FFF2F6" }}>
           <Text size="sm" ta="start" c="dimmed" lh={1.5} >
-            Esta iniciativa de Soluciones Digitales en Salud fue apoyada en su
-            diseño y desarrollo por el{" "}
-            <strong>Programa de las Naciones Unidas para el Desarrollo</strong>.
-            Corresponde al
-            <strong> Municipio de Comodoro Rivadavia</strong> la actualización
-            de los contenidos. Las opiniones, designaciones y recomendaciones
-            que se presentan en esta web no reflejan necesariamente la posición
-            oficial de PNUD.
+            Esta iniciativa de Soluciones Digitales en Salud fue apoyada en su diseño y desarrollo por el <strong>Programa de las Naciones Unidas para el Desarrollo (PNUD)</strong>. Corresponde al <strong>Municipio de Comodoro Rivadavia</strong> la actualización de los contenidos. Las opiniones, designaciones y recomendaciones que se presentan en esta web, el ChatBot y las herramientas derivadas de este desarrollo y solución digital no reflejan necesariamente la posición oficial de PNUD.
           </Text>
           <Text size="xs" ta="center" c="dimmed" mt="md" fw={600}>
             OCTUBRE DE 2025

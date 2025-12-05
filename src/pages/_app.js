@@ -1,4 +1,4 @@
-import { MantineProvider, AppShell, createTheme } from '@mantine/core';
+import { MantineProvider, createTheme } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { ModalsProvider } from '@mantine/modals';
 import { SessionProvider } from 'next-auth/react';
@@ -116,24 +116,23 @@ export default function App({ Component, pageProps: { session, ...pageProps } })
               {/* Visit Tracker - Automatic page visit tracking */}
               <VisitTracker />
               
-              <AppShell
-                header={{ height: 70 }}
-                padding="0"
-              >
+              <div style={{ position: 'relative', minHeight: '100vh' }}>
                 <Navbar />
-                <AppShell.Main
+                <main
                   style={{
                     paddingTop: '60px',
-                    minHeight: 'calc(100vh - 60px)'
+                    minHeight: 'calc(100vh - 60px)',
+                    position: 'relative',
+                    zIndex: 1
                   }}
                 >
                   <Component {...pageProps} />
                   <Footer />
-                </AppShell.Main>
-                
-                {/* Floating Chat - Available on all pages */}
-                <FloatingChat />
-              </AppShell>
+                </main>
+              </div>
+              
+              {/* Floating Chat - Available on all pages - OUTSIDE AppShell */}
+              <FloatingChat />
             </ErrorBoundary>
           </ErrorProvider>
         </ModalsProvider>

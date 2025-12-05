@@ -11,8 +11,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('Initializing WhatsApp conversations table...');
-
     // Crear tabla para conversaciones de WhatsApp si no existe
     const createConversationsTable = `
       CREATE TABLE IF NOT EXISTS whatsapp_conversations (
@@ -28,7 +26,6 @@ export default async function handler(req, res) {
     `;
 
     await query(createConversationsTable);
-    console.log('WhatsApp conversations table created successfully');
 
     // Crear tabla para mensajes de WhatsApp si no existe
     const createMessagesTable = `
@@ -49,7 +46,6 @@ export default async function handler(req, res) {
     `;
 
     await query(createMessagesTable);
-    console.log('WhatsApp messages table created successfully');
 
     // Crear índices para optimizar consultas
     const indexes = [
@@ -64,17 +60,14 @@ export default async function handler(req, res) {
     for (const indexQuery of indexes) {
       try {
         await query(indexQuery);
-        console.log('Index created:', indexQuery.split(' ')[5]);
       } catch (err) {
-        console.log('Index might already exist:', err.message);
+        console.error('Error creating index:', err);
       }
     }
 
     // Verificar si hay datos
     const countConversations = await query('SELECT COUNT(*) as count FROM whatsapp_conversations');
     const countMessages = await query('SELECT COUNT(*) as count FROM whatsapp_messages');
-
-    console.log('WhatsApp tables initialized successfully');
     
     res.status(200).json({
       success: true,

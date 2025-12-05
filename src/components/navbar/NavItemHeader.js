@@ -41,7 +41,7 @@ const NavItemHeader = props => {
                   const key = `${item.id}-${index}`;
                   const { label, icon:Icon, children } = item;
                   const ppp = padd + 10;
-                  if(location==item.link){console.log(item.id)}
+                  if(location==item.link)
                   if (children.length > 0) {
                     return (
                       <NavItemHeader key={item.id} item={{...item, link:item.link, isSubmenu:true, test:ppp }}/>

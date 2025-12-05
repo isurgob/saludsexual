@@ -7,7 +7,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('Simple analytics endpoint called');
     
     // Consulta muy simple para empezar
     const simpleQuery = `
@@ -18,10 +17,8 @@ export default async function handler(req, res) {
       WHERE timestamp >= CURRENT_DATE - INTERVAL '30 days'
     `;
 
-    console.log('Executing simple query:', simpleQuery);
     
     const result = await query(simpleQuery);
-    console.log('Query result:', result.rows[0]);
 
     // Consulta de horas del día
     const hourlyQuery = `
@@ -34,9 +31,7 @@ export default async function handler(req, res) {
       ORDER BY EXTRACT(HOUR FROM timestamp)::INTEGER
     `;
 
-    console.log('Executing hourly query');
     const hourlyResult = await query(hourlyQuery);
-    console.log('Hourly result:', hourlyResult.rows);
 
     res.status(200).json({
       success: true,

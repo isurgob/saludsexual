@@ -38,17 +38,14 @@ export default function MapasAdmin() {
     if (status === 'loading') return; // Aún cargando
 
     if (status === 'unauthenticated') {
-      console.log('❌ Usuario no autenticado, redirigiendo a login');
       router.push('/login');
       return;
     }
 
     if (session?.user) {
-      console.log('✅ Usuario autenticado en mapas:', session.user);
       
       // Verificar que sea admin o moderador
       if (session.user.role !== 1 && session.user.role !== 2) {
-        console.log('⚠️ Usuario sin permisos adecuados para mapas');
         router.push('/login?error=insufficient_permissions');
         return;
       }
@@ -58,7 +55,6 @@ export default function MapasAdmin() {
   }, [session, status, router]);
 
   const handleLogout = async () => {
-    console.log('🚪 Cerrando sesión desde mapas...');
     await signOut({ 
       callbackUrl: '/login',
       redirect: true 

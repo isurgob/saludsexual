@@ -30,16 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# environment variables - NEVER COMMIT THESE
-.env
-.env.local
-.env.development
-.env.test
-.env.production
-.env.dev
-.env.prod
-environments/.env*
-!environments/*.example
+# env files (can opt-in for committing if needed)
 
 
 # deployment scripts (no longer needed for manual deployment)

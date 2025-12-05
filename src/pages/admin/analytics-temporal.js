@@ -323,8 +323,7 @@ export default function AnalyticsTemporal() {
             data={[
               { label: '📊 Resumen', value: 'overview' },
               { label: '🗓️ Mapa de Calor', value: 'heatmap' },
-              { label: '📈 Tendencias', value: 'trends' },
-              { label: '💡 Insights', value: 'insights' }
+              { label: '📈 Tendencias', value: 'trends' }
             ]}
           />
           <Badge variant="light" color="blue" size="lg">
@@ -375,21 +374,6 @@ export default function AnalyticsTemporal() {
               </Text>
             </Card>
 
-            <Card shadow="md" p="lg" radius="md" withBorder bg="green.0">
-              <Group justify="space-between" mb="md">
-                <ThemeIcon size="xl" color="green" variant="light">
-                  <IconHome size={28} />
-                </ThemeIcon>
-                <Badge variant="light" color="green">Fin de semana</Badge>
-              </Group>
-              <Text size="xl" fw={700} c="green">
-                {Math.round((trendAnalysis?.weekendTraffic / (trendAnalysis?.weekdayTraffic || 1)) * 100) || 0}%
-              </Text>
-              <Text size="sm" c="dimmed">vs días laborales</Text>
-              <Text size="xs" c="green" mt="xs">
-                {formatNumber(trendAnalysis?.weekendTraffic || 0)} visitas totales
-              </Text>
-            </Card>
 
             <Card shadow="md" p="lg" radius="md" withBorder bg="violet.0">
               <Group justify="space-between" mb="md">
@@ -403,7 +387,7 @@ export default function AnalyticsTemporal() {
               </Text>
               <Text size="sm" c="dimmed">visitas en período</Text>
               <Text size="xs" c="violet" mt="xs">
-                {analytics?.generalStats?.unique_visitors || 0} usuarios únicos
+                {analytics?.generalStats?.unique_visitors || 0} usuarios diferentes
               </Text>
             </Card>
           </SimpleGrid>
@@ -538,218 +522,53 @@ export default function AnalyticsTemporal() {
                     <Text fw={600} size="sm">Patrón Semanal</Text>
                     <Badge size="sm" variant="light" color="blue">7 días</Badge>
                   </Group>
-                  <SimpleGrid cols={7} spacing="xs">
+                  <Stack gap="sm">
                     {analytics?.weeklyPatterns?.map((day, index) => {
-                      const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                      const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                      const dayShort = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
                       const maxVisits = Math.max(...analytics.weeklyPatterns.map(d => d.visit_count));
                       const percentage = (day.visit_count / maxVisits) * 100;
                       
                       return (
-                        <Stack key={index} align="center" gap="xs">
-                          <Text size="xs" fw={500}>{dayNames[day.day_of_week] || dayNames[index]}</Text>
+                        <div key={index}>
+                          <Group justify="space-between" mb="xs">
+                            <Group gap="xs">
+                              <Text size="sm" fw={600} w={80}>
+                                {dayShort[day.day_of_week] || dayShort[index]}
+                              </Text>
+                              <Badge 
+                                size="xs" 
+                                variant="light" 
+                                color={percentage > 80 ? 'red' : percentage > 60 ? 'orange' : 'blue'}
+                              >
+                                {Math.round(percentage)}%
+                              </Badge>
+                            </Group>
+                            <Text size="sm" fw={600} c="dimmed">
+                              {day.visit_count.toLocaleString('es-ES')}
+                            </Text>
+                          </Group>
                           <Progress
                             value={percentage}
-                            size="sm"
+                            size="md"
                             color={percentage > 80 ? 'red' : percentage > 60 ? 'orange' : 'blue'}
-                            style={{ width: '100%', transform: 'rotate(-90deg)', height: 60 }}
+                            style={{ width: '100%' }}
                           />
-                          <Text size="xs" c="dimmed">{day.visit_count}</Text>
-                        </Stack>
+                        </div>
                       );
                     })}
-                  </SimpleGrid>
-                </Card>
-
-                <Card withBorder p="md" radius="md">
-                  <Text fw={600} size="sm" mb="sm">Comparativas</Text>
-                  <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                    <Group justify="space-between">
-                      <Text size="sm">🌅 Mañana (6-12h)</Text>
-                      <Text fw={600}>
-                        {hourlyTrends
-                          .filter(h => h.hourOfDay >= 6 && h.hourOfDay < 12)
-                          .reduce((sum, h) => sum + h.visits, 0)
-                        }
-                      </Text>
-                    </Group>
-                    <Group justify="space-between">
-                      <Text size="sm">🌇 Tarde (12-18h)</Text>
-                      <Text fw={600}>
-                        {hourlyTrends
-                          .filter(h => h.hourOfDay >= 12 && h.hourOfDay < 18)
-                          .reduce((sum, h) => sum + h.visits, 0)
-                        }
-                      </Text>
-                    </Group>
-                    <Group justify="space-between">
-                      <Text size="sm">🌃 Noche (18-24h)</Text>
-                      <Text fw={600}>
-                        {hourlyTrends
-                          .filter(h => h.hourOfDay >= 18 && h.hourOfDay < 24)
-                          .reduce((sum, h) => sum + h.visits, 0)
-                        }
-                      </Text>
-                    </Group>
-                    <Group justify="space-between">
-                      <Text size="sm">🌙 Madrugada (0-6h)</Text>
-                      <Text fw={600}>
-                        {hourlyTrends
-                          .filter(h => h.hourOfDay >= 0 && h.hourOfDay < 6)
-                          .reduce((sum, h) => sum + h.visits, 0)
-                        }
-                      </Text>
-                    </Group>
-                  </SimpleGrid>
-                </Card>
-              </Stack>
-            </Paper>
-          </Grid.Col>
-
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <Paper withBorder p="lg" h="100%">
-              <Title order={4} size="h5" mb="md">📊 Estadísticas Clave</Title>
-              <Stack gap="md">
-                <div>
-                  <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb="xs">
-                    Día más activo
-                  </Text>
-                  <Group justify="space-between">
-                    <Text fw={600}>
-                      {['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][trendAnalysis?.peakDay?.day_of_week] || 'N/A'}
-                    </Text>
-                    <Badge size="sm" color="green">
-                      {trendAnalysis?.peakDay?.visit_count || 0}
-                    </Badge>
-                  </Group>
-                </div>
-
-                <Divider />
-
-                <div>
-                  <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb="xs">
-                    Horarios de actividad
-                  </Text>
-                  <Stack gap="xs">
-                    <Group justify="space-between">
-                      <Text size="sm">☀️ Día (6-18h)</Text>
-                      <Text fw={600} c="orange">
-                        {Math.round(
-                          (hourlyTrends
-                            .filter(h => h.hourOfDay >= 6 && h.hourOfDay < 18)
-                            .reduce((sum, h) => sum + h.visits, 0) / 
-                          (analytics?.generalStats?.total_visits || 1)) * 100
-                        )}%
-                      </Text>
-                    </Group>
-                    <Group justify="space-between">
-                      <Text size="sm">🌙 Noche (18-6h)</Text>
-                      <Text fw={600} c="blue">
-                        {Math.round(
-                          (hourlyTrends
-                            .filter(h => h.hourOfDay >= 18 || h.hourOfDay < 6)
-                            .reduce((sum, h) => sum + h.visits, 0) / 
-                          (analytics?.generalStats?.total_visits || 1)) * 100
-                        )}%
-                      </Text>
-                    </Group>
                   </Stack>
-                </div>
+                </Card>
 
-                <Divider />
-
-                <div>
-                  <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb="xs">
-                    Proyección siguiente semana
-                  </Text>
-                  <Group justify="space-between">
-                    <Text size="sm">Estimado</Text>
-                    <Text fw={600} c="cyan">
-                      ~{formatNumber((trendAnalysis?.avgDaily || 0) * 7)}
-                    </Text>
-                  </Group>
-                  <Text size="xs" c="dimmed">
-                    Basado en promedio actual
-                  </Text>
-                </div>
+              
               </Stack>
             </Paper>
           </Grid.Col>
+
+        
         </Grid>
       )}
-
-      {/* Insights */}
-      {viewType === 'insights' && (
-        <Stack gap="lg">
-          <Paper withBorder p="lg">
-            <Title order={3} size="h4" mb="md">💡 Insights Temporales</Title>
-            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
-              {timeInsights.map((insight, index) => (
-                <Card key={index} withBorder p="lg" radius="md">
-                  <Group mb="md">
-                    <ThemeIcon size="lg" color={insight.color} variant="light">
-                      <insight.icon size={24} />
-                    </ThemeIcon>
-                    <Text fw={600} c={insight.color}>
-                      {insight.title}
-                    </Text>
-                  </Group>
-                  <Text size="sm" c="dimmed">
-                    {insight.description}
-                  </Text>
-                </Card>
-              ))}
-            </SimpleGrid>
-          </Paper>
-
-          {/* Recomendaciones */}
-          <Paper withBorder p="lg" bg="blue.0">
-            <Group mb="md">
-              <ThemeIcon size="lg" color="blue" variant="light">
-                <IconInfoCircle size={24} />
-              </ThemeIcon>
-              <Title order={4} c="blue">📋 Recomendaciones Basadas en Patrones</Title>
-            </Group>
-            
-            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
-              <Card withBorder p="md" radius="md" bg="white">
-                <Text fw={600} mb="sm" c="orange">🕐 Optimización Horaria</Text>
-                <Stack gap="xs">
-                  <Text size="sm">
-                    • Programa contenido nuevo en horarios pico ({
-                      analytics?.hourlyPatterns?.reduce((max, hour) => 
-                        hour.visit_count > max.visit_count ? hour : max, 
-                        analytics.hourlyPatterns[0]
-                      )?.hour_of_day || 0}:00)
-                  </Text>
-                  <Text size="sm">
-                    • Realiza mantenimiento en horas de menor tráfico (madrugada)
-                  </Text>
-                  <Text size="sm">
-                    • Considera notificaciones push en horarios de alta actividad
-                  </Text>
-                </Stack>
-              </Card>
-
-              <Card withBorder p="md" radius="md" bg="white">
-                <Text fw={600} mb="sm" c="green">📅 Estrategia Semanal</Text>
-                <Stack gap="xs">
-                  <Text size="sm">
-                    • {trendAnalysis?.weekendTraffic > trendAnalysis?.weekdayTraffic ? 
-                       'Enfócate en contenido de fin de semana' : 
-                       'Prioriza días laborales para campañas'}
-                  </Text>
-                  <Text size="sm">
-                    • Planifica contenido educativo para días de mayor tráfico
-                  </Text>
-                  <Text size="sm">
-                    • Considera diferentes estrategias por tipo de día
-                  </Text>
-                </Stack>
-              </Card>
-            </SimpleGrid>
-          </Paper>
-        </Stack>
-      )}
+   
     </Container>
   );
 }

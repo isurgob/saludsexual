@@ -52,11 +52,6 @@ async function cambiarEstadoUsuario(req, res, usuarioId) {
   try {
     const { estado, admin_id } = req.body;
 
-    console.log('🔍 CAMBIANDO ESTADO USUARIO:', {
-      usuarioId,
-      nuevoEstado: estado,
-      adminId: admin_id
-    });
 
     // Validaciones básicas
     if (!estado || !admin_id) {
@@ -89,11 +84,6 @@ async function cambiarEstadoUsuario(req, res, usuarioId) {
       );
       
       const response = result.rows[0].cambiar_estado_usuario;
-      
-      console.log('✅ RESULTADO CAMBIO ESTADO:', {
-        success: response.success,
-        message: response.message
-      });
       
       if (response.success) {
         return res.status(200).json(response);
@@ -130,12 +120,6 @@ async function cambiarEstadoUsuario(req, res, usuarioId) {
 async function eliminarUsuario(req, res, usuarioId) {
   try {
     const { admin_id } = req.body;
-
-    console.log('🔍 ELIMINANDO USUARIO:', {
-      usuarioId,
-      adminId: admin_id
-    });
-
     // Validaciones básicas
     if (!admin_id) {
       return res.status(400).json({
@@ -166,11 +150,6 @@ async function eliminarUsuario(req, res, usuarioId) {
       );
       
       const response = result.rows[0].eliminar_usuario;
-      
-      console.log('✅ RESULTADO ELIMINACIÓN:', {
-        success: response.success,
-        message: response.message
-      });
       
       if (response.success) {
         return res.status(200).json(response);

@@ -42,17 +42,13 @@ const CrearCentro = () => {
     if (status === 'loading') return; // Aún cargando
 
     if (status === 'unauthenticated') {
-      console.log('❌ Usuario no autenticado, redirigiendo a login');
       router.push('/login');
       return;
     }
 
-    if (session?.user) {
-      console.log('✅ Usuario autenticado en crear centro:', session.user);
-      
+    if (session?.user) {      
       // Verificar que sea admin o moderador
       if (session.user.role !== 1 && session.user.role !== 2) {
-        console.log('⚠️ Usuario sin permisos adecuados para crear centros');
         router.push('/admin/dashboard?error=insufficient_permissions');
         return;
       }
@@ -125,11 +121,7 @@ const CrearCentro = () => {
           fetch('/api/servicios')
         ]);
 
-        console.log('Respuestas de APIs:', {
-          categorias: categoriasRes.status,
-          tipos: tiposRes.status,
-          servicios: serviciosRes.status
-        });
+        
 
         if (!categoriasRes.ok) {
           throw new Error(`Error al obtener categorías: ${categoriasRes.status}`);
@@ -148,12 +140,6 @@ const CrearCentro = () => {
           tiposRes.json(),
           serviciosRes.json()
         ]);
-
-        console.log('Datos obtenidos:', {
-          categorias: categoriasData?.length,
-          tipos: tiposData?.length,
-          servicios: serviciosResponse?.data?.length || serviciosResponse?.length
-        });
 
         setCategorias(categoriasData || []);
         setTipos(tiposData || []);

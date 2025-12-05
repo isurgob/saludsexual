@@ -20,8 +20,6 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log('Enviando mensaje de WhatsApp:', { to, message: message.substring(0, 100) + '...' });
-
     // Enviar mensaje usando el servicio
     const result = await WhatsAppService.sendMessage(to, message);
 
@@ -37,8 +35,6 @@ export default async function handler(req, res) {
         api_response: result
       }
     );
-
-    console.log('Mensaje enviado y guardado correctamente');
 
     res.status(200).json({
       success: true,

@@ -15,9 +15,28 @@ import {
   IconClipboardCheck,
 } from "@tabler/icons-react";
 import Head from "next/head";
-import { openFloatingChat, openFloatingChatWithTopic } from "@/utils/chatUtils";
+import { openFloatingChat, openFloatingChatWithTopic, getChatLoadingState } from "@/utils/chatUtils";
+import { useState, useEffect } from "react";
 
 export default function Chat() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Escuchar cambios en el estado de loading del chat
+    const handleLoadingStateChange = (event) => {
+      setIsLoading(event.detail.loading);
+    };
+
+    window.addEventListener('chatLoadingStateChanged', handleLoadingStateChange);
+    
+    // Inicializar con el estado actual
+    setIsLoading(getChatLoadingState());
+
+    return () => {
+      window.removeEventListener('chatLoadingStateChanged', handleLoadingStateChange);
+    };
+  }, []);
+
   return (
     <>
       <Head>
@@ -68,7 +87,7 @@ export default function Chat() {
                 }
                 radius="xl"
                 component="a"
-                href="https://wa.me/5492974000000?text=Hola,%20quiero%20consultar%20sobre%20salud%20sexual"
+                href="https://wa.me/5492974280646?text=Hola,%20quiero%20consultar%20sobre%20salud%20sexual"
                 target="_blank"
                 style={{
                   backgroundColor: "#25D366",
@@ -102,6 +121,7 @@ export default function Chat() {
                   size="xs"
                   variant="default"
                   radius="xl"
+                  disabled={isLoading}
                   onClick={() => {
                     // Abrir el chat flotante con tema específico
                     openFloatingChatWithTopic(topic);
@@ -113,15 +133,18 @@ export default function Chat() {
                       height: "28px",
                       paddingLeft: "12px",
                       paddingRight: "12px",
-                      background:
-                        "linear-gradient(135deg, #ffffff 0%, #faf9f9 100%)",
+                      background: isLoading 
+                        ? "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)"
+                        : "linear-gradient(135deg, #ffffff 0%, #faf9f9 100%)",
                       border: "1px solid #e9ecef",
-                      color: "#495057",
+                      color: isLoading ? "#adb5bd" : "#495057",
                       transition: "all 0.2s ease",
+                      cursor: isLoading ? "not-allowed" : "pointer",
                       "&:hover": {
-                        background:
-                          "linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%)",
-                        transform: "translateY(-1px)",
+                        background: isLoading 
+                          ? "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)"
+                          : "linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%)",
+                        transform: isLoading ? "none" : "translateY(-1px)",
                       },
                     },
                   }}

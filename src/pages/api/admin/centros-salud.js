@@ -5,12 +5,12 @@ import {
   deleteCentroSalud,
   deleteCentroServicios, 
   insertCentroServicio
-} from '../../../service/centrosSaludService.js';
+} from '../../../services/centrosSaludService.js';
 import { 
   getMapaCategorias, 
   getMapaTipos,
   getServiciosUnicos
-} from '../../../service/metadataService.js';
+} from '../../../services/metadataService.js';
 
 // API route completo para administración de centros de salud
 export default async function handler(req, res) {
@@ -126,8 +126,6 @@ async function handleCreate(req, res) {
       servicios
     } = req.body;
 
-    console.log('📝 Datos recibidos para crear:', req.body);
-
     // Validaciones básicas
     if (!nombre || !direccion || !latitud || !longitud || !tipo || !categoria) {
       return res.status(400).json({
@@ -165,8 +163,6 @@ async function handleCreate(req, res) {
       descripcion: descripcion ? descripcion.trim() : null
     };
 
-    console.log('📝 Datos preparados para crear:', createData);
-
     // Crear el centro
     const newId = await createCentroSalud(createData);
 
@@ -176,17 +172,14 @@ async function handleCreate(req, res) {
       let serviciosLog = [];
 
       if (servicios && Array.isArray(servicios) && servicios.length > 0) {
-        console.log('🔄 Agregando servicios al nuevo centro...');
         
         for (const servicioId of servicios) {
           try {
             const insertSuccess = await insertCentroServicio(newId, parseInt(servicioId));
             if (insertSuccess) {
               serviciosLog.push({ servicioId: parseInt(servicioId), status: 'success' });
-              console.log(`✅ Servicio ${servicioId} agregado correctamente`);
             } else {
               serviciosLog.push({ servicioId: parseInt(servicioId), status: 'failed' });
-              console.log(`❌ Fallo al agregar servicio ${servicioId}`);
               serviciosCreated = false;
             }
           } catch (serviceError) {
@@ -246,8 +239,6 @@ async function handleUpdate(req, res) {
       });
     }
 
-    console.log('📝 Datos recibidos para actualizar:', { id, ...req.body });
-
     // Validaciones básicas
     if (!nombre || !direccion || !latitud || !longitud) {
       return res.status(400).json({
@@ -292,8 +283,6 @@ async function handleUpdate(req, res) {
       descripcion: descripcion ? descripcion.trim() : null
     };
 
-    console.log('📝 Datos preparados para actualizar:', { id: parseInt(id), ...updateData });
-
     // Ejecutar la actualización
     const success = await updateCentroSalud(parseInt(id), updateData);
 
@@ -303,27 +292,18 @@ async function handleUpdate(req, res) {
       let serviciosLog = [];
 
       if (servicios && Array.isArray(servicios)) {
-        console.log('🔄 Iniciando actualización de servicios...');
-        console.log('📋 Servicios a procesar:', servicios);
-
-        // 1. Eliminar todos los servicios existentes del centro
-        console.log('🗑️ Eliminando servicios existentes...');
         const deleteSuccess = await deleteCentroServicios(parseInt(id));
         
         if (deleteSuccess) {
-          console.log('✅ Servicios existentes eliminados');
           
           // 2. Insertar los nuevos servicios uno por uno
-          console.log('➕ Insertando nuevos servicios...');
           for (const servicioId of servicios) {
             try {
               const insertSuccess = await insertCentroServicio(parseInt(id), parseInt(servicioId));
               if (insertSuccess) {
                 serviciosLog.push({ servicioId: parseInt(servicioId), status: 'success' });
-                console.log(`✅ Servicio ${servicioId} insertado correctamente`);
               } else {
                 serviciosLog.push({ servicioId: parseInt(servicioId), status: 'failed', error: 'Insert returned false' });
-                console.log(`❌ Fallo al insertar servicio ${servicioId}`);
                 serviciosUpdated = false;
               }
             } catch (serviceError) {
@@ -333,11 +313,8 @@ async function handleUpdate(req, res) {
             }
           }
         } else {
-          console.log('❌ Fallo al eliminar servicios existentes');
           serviciosUpdated = false;
         }
-      } else {
-        console.log('ℹ️ No se proporcionaron servicios para actualizar');
       }
 
       return res.status(200).json({
@@ -373,14 +350,6 @@ async function handleDelete(req, res) {
     const idFromBody = req.body?.id;
     const id = idFromQuery || idFromBody;
 
-    console.log('🔍 DEBUGGING - Eliminación:', {
-      idFromQuery,
-      idFromBody,
-      selectedId: id,
-      queryParams: req.query,
-      bodyParams: req.body
-    });
-
     // Validar que se proporcione el ID
     if (!id || isNaN(parseInt(id))) {
       return res.status(400).json({ 
@@ -392,21 +361,10 @@ async function handleDelete(req, res) {
         }
       });
     }
-
-    console.log(`🗑️ Solicitud de eliminación para centro ID: ${id}`);
-
-    // Primero eliminar servicios asociados
-    console.log('🗑️ Eliminando servicios asociados...');
-    const serviciosDeleted = await deleteCentroServicios(parseInt(id));
+    const serviciosDeleted = await deleteCentroServicios(parseInt(id));   
     
-    if (serviciosDeleted) {
-      console.log('✅ Servicios eliminados correctamente');
-    } else {
-      console.log('⚠️ No se encontraron servicios asociados o ya fueron eliminados');
-    }
 
     // Luego eliminar el centro
-    console.log('🗑️ Eliminando centro...');
     const success = await deleteCentroSalud(parseInt(id));
 
     if (success) {

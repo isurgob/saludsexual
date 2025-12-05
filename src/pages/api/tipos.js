@@ -1,4 +1,4 @@
-import { getTipos } from '../../service/metadataService.js';
+import { getTipos } from '../../services/metadataService.js';
 
 // API route para obtener tipos
 export default async function handler(req, res) {

@@ -9,7 +9,7 @@ export function verifyToken(req) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET || 'fallback-secret-key-2024');
+    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET || 'isur-secret-key-2024');
     return decoded;
   } catch (error) {
     throw new Error('Token inválido');

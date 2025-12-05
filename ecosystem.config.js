@@ -1,12 +1,12 @@
 module.exports = {
   apps: [
     {
-      name: 'health-chatbot-app',
+      name: 'chatbot-test',
       script: 'npm',
       args: 'start',
       instances: 1,
       exec_mode: 'fork',
-      cwd: '/path/to/your/app',
+      cwd: '/home/admin/asistenteVirtual',
       error_file: './logs/err.log',
       out_file: './logs/out.log',
       log_file: './logs/combined.log',

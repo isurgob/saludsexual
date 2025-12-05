@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 import {
   Container,
   Title,
@@ -21,9 +21,10 @@ import {
   Grid,
   ThemeIcon,
   Table,
-  ScrollArea
-} from '@mantine/core';
-import LoadingScreen from '../../components/LoadingScreen';
+  ScrollArea,
+} from "@mantine/core";
+import LoadingScreen from "../../components/LoadingScreen";
+import DateRangeFilter from "../../components/admin/DateRangeFilter";
 import {
   IconArrowLeft,
   IconRefresh,
@@ -48,8 +49,8 @@ import {
   IconExternalLink,
   IconRoute,
   IconBrowser,
-  IconStar
-} from '@tabler/icons-react';
+  IconStar,
+} from "@tabler/icons-react";
 
 export default function AnalyticsSecciones() {
   const { data: session, status } = useSession();
@@ -57,62 +58,74 @@ export default function AnalyticsSecciones() {
   const [visitStats, setVisitStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [timeRange, setTimeRange] = useState('30');
+  const [timeRange, setTimeRange] = useState("30");
   const [refreshing, setRefreshing] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [isDateRangeActive, setIsDateRangeActive] = useState(false);
 
   // Verificar autenticación y permisos
   useEffect(() => {
-    if (status === 'loading') return; // Aún cargando
+    if (status === "loading") return; // Aún cargando
 
-    if (status === 'unauthenticated') {
-      console.log('❌ Usuario no autenticado, redirigiendo a login');
-      router.push('/login');
+    if (status === "unauthenticated") {
+      router.push("/login");
       return;
     }
 
     if (session?.user) {
-      console.log('✅ Usuario autenticado:', session.user);
-      
       // Verificar que sea admin o moderador
       if (session.user.role !== 1 && session.user.role !== 2) {
-        console.log('⚠️ Usuario sin permisos adecuados');
-        router.push('/login?error=insufficient_permissions');
+        router.push("/login?error=insufficient_permissions");
         return;
       }
-      
+
       // Usuario válido, cargar datos
       loadVisitStats();
     }
   }, [session, status]);
 
-  // Cargar datos cuando cambie el rango de tiempo
+  // Cargar datos cuando cambie el rango de tiempo o las fechas personalizadas
   useEffect(() => {
     if (session?.user && (session.user.role === 1 || session.user.role === 2)) {
       loadVisitStats();
     }
-  }, [timeRange]);
+  }, [timeRange, isDateRangeActive, startDate, endDate]);
 
   const loadVisitStats = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch(`/api/analytics/page-visits?days=${timeRange}`);
+
+      let url = "/api/analytics/page-visits";
+      const params = new URLSearchParams();
+
+      if (isDateRangeActive && startDate && endDate) {
+        // Usar fechas personalizadas
+        params.append("startDate", startDate.toISOString().split("T")[0]);
+        params.append("endDate", endDate.toISOString().split("T")[0]);
+      } else {
+        // Usar rango predefinido
+        params.append("days", timeRange);
+      }
+
+      url += "?" + params.toString();
+
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-      
+
       const result = await response.json();
-      console.log('API Response:', result);
-      
+
       // La API devuelve { success: true, data: {...} }
       if (result.success && result.data) {
         setVisitStats(result.data);
       } else {
-        throw new Error('Invalid API response format');
+        throw new Error("Invalid API response format");
       }
     } catch (error) {
-      console.error('Error loading visit stats:', error);
+      console.error("Error loading visit stats:", error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -125,7 +138,25 @@ export default function AnalyticsSecciones() {
     await loadVisitStats();
   };
 
-  if (status === 'loading' || loading) {
+  // Manejar cambio de rango de fechas personalizadas
+  const handleDateRangeChange = (start, end) => {
+    setStartDate(start);
+    setEndDate(end);
+    setIsDateRangeActive(true);
+    // Desactivar timeRange cuando se usa rango personalizado
+    setTimeRange("");
+  };
+
+  // Limpiar filtro de fechas
+  const handleClearDateRange = () => {
+    setStartDate(null);
+    setEndDate(null);
+    setIsDateRangeActive(false);
+    // Volver al timeRange por defecto
+    setTimeRange("30");
+  };
+
+  if (status === "loading" || loading) {
     return (
       <LoadingScreen
         message="Cargando métricas de secciones más visitadas..."
@@ -138,9 +169,9 @@ export default function AnalyticsSecciones() {
   if (error) {
     return (
       <Container size="lg" py="xl">
-        <Alert 
-          icon={<IconInfoCircle size={16} />} 
-          title="Error al cargar datos" 
+        <Alert
+          icon={<IconInfoCircle size={16} />}
+          title="Error al cargar datos"
           color="red"
           variant="light"
         >
@@ -149,7 +180,11 @@ export default function AnalyticsSecciones() {
             <Button size="sm" onClick={loadVisitStats}>
               Reintentar
             </Button>
-            <Button variant="light" size="sm" onClick={() => router.push('/admin/dashboard')}>
+            <Button
+              variant="light"
+              size="sm"
+              onClick={() => router.push("/admin/dashboard")}
+            >
               Volver al Tablero
             </Button>
           </Group>
@@ -167,30 +202,51 @@ export default function AnalyticsSecciones() {
             <ActionIcon
               variant="light"
               size="lg"
-              onClick={() => router.push('/admin/dashboard')}
+              onClick={() => router.push("/admin/dashboard")}
             >
               <IconArrowLeft size={18} />
             </ActionIcon>
             <Box>
-              <Title order={1} size="h2">Secciones Más Visitadas</Title>
+              <Title order={1} size="h2">
+                Secciones Más Visitadas
+              </Title>
               <Text c="dimmed" size="sm">
                 Análisis detallado de páginas populares y patrones de navegación
               </Text>
             </Box>
           </Group>
-          
+
           <Group gap="sm">
             <Select
               data={[
-                { value: '7', label: 'Últimos 7 días' },
-                { value: '30', label: 'Últimos 30 días' },
-                { value: '90', label: 'Últimos 90 días' }
+                { value: "7", label: "Últimos 7 días" },
+                { value: "30", label: "Últimos 30 días" },
+                { value: "90", label: "Últimos 90 días" },
               ]}
               value={timeRange}
-              onChange={setTimeRange}
+              onChange={(value) => {
+                if (value) {
+                  // Primero limpiar las fechas personalizadas
+                  setStartDate(null);
+                  setEndDate(null);
+                  setIsDateRangeActive(false);
+                  // Luego aplicar el nuevo timeframe
+                  setTimeRange(value);
+                }
+              }}
               size="sm"
               leftSection={<IconFilter size={16} />}
+              disabled={isDateRangeActive}
             />
+            
+            <DateRangeFilter
+              startDate={startDate}
+              endDate={endDate}
+              onDateChange={handleDateRangeChange}
+              onClear={handleClearDateRange}
+              disabled={loading}
+            />
+            
             <ActionIcon
               variant="light"
               loading={refreshing}
@@ -207,176 +263,99 @@ export default function AnalyticsSecciones() {
         <>
           {/* Resumen de Páginas */}
           <Paper withBorder p="lg" mb="md">
-            <Title order={2} size="h3" mb="md">Resumen de Páginas Populares</Title>
+            <Title order={2} size="h3" mb="md">
+              Resumen de Páginas Populares
+            </Title>
             <SimpleGrid cols={{ base: 2, md: 4 }} spacing="lg">
               <Card shadow="sm" p="lg" radius="md" withBorder bg="grape.0">
                 <Group justify="space-between" mb="xs">
-                  <Text size="sm" fw={600} c="grape">Total de Páginas</Text>
+                  <Text size="sm" fw={600} c="grape">
+                    Total de Páginas
+                  </Text>
                   <ThemeIcon variant="light" color="grape" size="sm">
                     <IconWorldWww size={16} />
                   </ThemeIcon>
                 </Group>
-                <Text fw={700} size="xl">{visitStats.popularPages.length}</Text>
-                <Text size="xs" c="dimmed">Páginas con tráfico</Text>
+                <Text fw={700} size="xl">
+                  {visitStats.popularPages.length}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Páginas con tráfico
+                </Text>
               </Card>
 
               <Card shadow="sm" p="lg" radius="md" withBorder bg="blue.0">
                 <Group justify="space-between" mb="xs">
-                  <Text size="sm" fw={600} c="blue">Página #1</Text>
+                  <Text size="sm" fw={600} c="blue">
+                    Página #1
+                  </Text>
                   <ThemeIcon variant="light" color="blue" size="sm">
                     <IconStar size={16} />
                   </ThemeIcon>
                 </Group>
                 <Text fw={700} size="lg" lineClamp={1}>
-                  {visitStats.popularPages[0]?.page_title || 'N/A'}
+                  {visitStats.popularPages[0]?.page_title || "N/A"}
                 </Text>
                 <Text size="xs" c="dimmed">
-                  {visitStats.popularPages[0]?.visit_count.toLocaleString() || '0'} visitas
+                  {visitStats.popularPages[0]?.visit_count.toLocaleString() ||
+                    "0"}{" "}
+                  visitas
                 </Text>
               </Card>
 
               <Card shadow="sm" p="lg" radius="md" withBorder bg="green.0">
                 <Group justify="space-between" mb="xs">
-                  <Text size="sm" fw={600} c="green">Concentración Top 3</Text>
+                  <Text size="sm" fw={600} c="green">
+                    Concentración Top 3
+                  </Text>
                   <ThemeIcon variant="light" color="green" size="sm">
                     <IconChartBar size={16} />
                   </ThemeIcon>
                 </Group>
                 <Text fw={700} size="xl">
-                  {visitStats.popularPages.slice(0, 3).reduce((acc, page) => 
-                    acc + parseFloat(page.percentage || 0), 0).toFixed(1)}%
+                  {visitStats.popularPages
+                    .slice(0, 3)
+                    .reduce(
+                      (acc, page) => acc + parseFloat(page.percentage || 0),
+                      0
+                    )
+                    .toFixed(1)}
+                  %
                 </Text>
-                <Text size="xs" c="dimmed">Del tráfico total</Text>
+                <Text size="xs" c="dimmed">
+                  Del tráfico total
+                </Text>
               </Card>
 
               <Card shadow="sm" p="lg" radius="md" withBorder bg="orange.0">
                 <Group justify="space-between" mb="xs">
-                  <Text size="sm" fw={600} c="orange">Diversidad</Text>
+                  <Text size="sm" fw={600} c="orange">
+                    Diversidad
+                  </Text>
                   <ThemeIcon variant="light" color="orange" size="sm">
                     <IconActivity size={16} />
                   </ThemeIcon>
                 </Group>
                 <Text fw={700} size="xl">
-                  {visitStats.popularPages.filter(page => 
-                    parseFloat(page.percentage) > 5).length}
+                  {
+                    visitStats.popularPages.filter(
+                      (page) => parseFloat(page.percentage) > 5
+                    ).length
+                  }
                 </Text>
-                <Text size="xs" c="dimmed">Páginas con &gt;5% tráfico</Text>
+                <Text size="xs" c="dimmed">
+                  Páginas con &gt;5% tráfico
+                </Text>
               </Card>
             </SimpleGrid>
-          </Paper>
-
-          {/* Top 10 Páginas Más Visitadas */}
-          <Paper withBorder p="lg" mb="md">
-            <Group justify="space-between" mb="md">
-              <Title order={2} size="h3">Top 10 Páginas Más Visitadas</Title>
-              <Badge variant="light" color="grape" size="lg">
-                Ranking completo
-              </Badge>
-            </Group>
-            
-            <Grid>
-              {visitStats.popularPages.slice(0, 10).map((page, index) => (
-                <Grid.Col key={index} span={{ base: 12, md: 6 }}>
-                  <Card 
-                    shadow="sm" 
-                    p="lg" 
-                    radius="md" 
-                    withBorder 
-                    bg={index < 3 ? 'grape.0' : 'gray.0'}
-                  >
-                    <Group justify="space-between" mb="md">
-                      <Badge 
-                        size="xl" 
-                        variant="filled" 
-                        color={
-                          index === 0 ? 'yellow' : 
-                          index === 1 ? 'gray' : 
-                          index === 2 ? 'orange' : 'grape'
-                        }
-                      >
-                        #{index + 1}
-                      </Badge>
-                      <Group gap="xs">
-                        <Badge size="md" variant="light" color="grape">
-                          {page.percentage}%
-                        </Badge>
-                        {index < 3 && (
-                          <Badge size="sm" variant="filled" color="gold">
-                            TOP 3
-                          </Badge>
-                        )}
-                      </Group>
-                    </Group>
-                    
-                    <Box mb="md">
-                      <Group justify="space-between" align="flex-start" mb="xs">
-                        <Text fw={600} size="md" lineClamp={2}>
-                          {page.page_title || page.page_path}
-                        </Text>
-                        <ActionIcon 
-                          variant="light" 
-                          color="grape" 
-                          size="sm"
-                          onClick={() => window.open(page.page_path, '_blank')}
-                        >
-                          <IconExternalLink size={14} />
-                        </ActionIcon>
-                      </Group>
-                      <Text size="sm" c="dimmed" ff="monospace" mb="md">
-                        {page.page_path}
-                      </Text>
-                    </Box>
-
-                    <Stack gap="sm">
-                      <Group justify="space-between">
-                        <Group gap="xs">
-                          <IconEye size={16} />
-                          <Text size="sm" fw={500}>
-                            {page.visit_count.toLocaleString()} visitas totales
-                          </Text>
-                        </Group>
-                        <Group gap="xs">
-                          <IconUsers size={16} />
-                          <Text size="sm" c="dimmed">
-                            {page.unique_visitors} visitantes únicos
-                          </Text>
-                        </Group>
-                      </Group>
-
-                      <Progress 
-                        value={parseFloat(page.percentage)} 
-                        color="grape" 
-                        size="md" 
-                        radius="xl"
-                      />
-
-                      <Group justify="space-between" mt="xs">
-                        <Group gap="xs">
-                          <Badge size="xs" color="cyan" variant="light">
-                            📱 {page.mobile_visits || 0} móvil
-                          </Badge>
-                          <Badge size="xs" color="blue" variant="light">
-                            💻 {page.desktop_visits || 0} escritorio
-                          </Badge>
-                        </Group>
-                        <Text size="xs" c="dimmed">
-                          {page.unique_visitors && page.visit_count 
-                            ? `${(page.visit_count / page.unique_visitors).toFixed(1)} visitas/usuario`
-                            : '1.0 visitas/usuario'
-                          }
-                        </Text>
-                      </Group>
-                    </Stack>
-                  </Card>
-                </Grid.Col>
-              ))}
-            </Grid>
           </Paper>
 
           {/* Tabla Completa de Páginas */}
           <Paper withBorder p="lg" mb="md">
             <Group justify="space-between" mb="md">
-              <Title order={2} size="h3">Listado Completo de Páginas</Title>
+              <Title order={2} size="h3">
+                Listado Completo de Páginas
+              </Title>
               <Badge variant="light" color="blue">
                 {visitStats.popularPages.length} páginas totales
               </Badge>
@@ -400,13 +379,17 @@ export default function AnalyticsSecciones() {
                   {visitStats.popularPages.map((page, index) => (
                     <Table.Tr key={index}>
                       <Table.Td>
-                        <Badge 
-                          size="sm" 
+                        <Badge
+                          size="sm"
                           variant={index < 3 ? "filled" : "light"}
                           color={
-                            index === 0 ? 'yellow' : 
-                            index === 1 ? 'gray' : 
-                            index === 2 ? 'orange' : 'grape'
+                            index === 0
+                              ? "yellow"
+                              : index === 1
+                              ? "gray"
+                              : index === 2
+                              ? "orange"
+                              : "grape"
                           }
                         >
                           #{index + 1}
@@ -414,7 +397,7 @@ export default function AnalyticsSecciones() {
                       </Table.Td>
                       <Table.Td>
                         <Text size="sm" fw={500} lineClamp={1}>
-                          {page.page_title || 'Sin título'}
+                          {page.page_title || "Sin título"}
                         </Text>
                       </Table.Td>
                       <Table.Td>
@@ -422,11 +405,13 @@ export default function AnalyticsSecciones() {
                           <Text size="xs" ff="monospace" c="dimmed">
                             {page.page_path}
                           </Text>
-                          <ActionIcon 
-                            variant="subtle" 
-                            color="grape" 
+                          <ActionIcon
+                            variant="subtle"
+                            color="grape"
                             size="xs"
-                            onClick={() => window.open(page.page_path, '_blank')}
+                            onClick={() =>
+                              window.open(page.page_path, "_blank")
+                            }
                           >
                             <IconExternalLink size={10} />
                           </ActionIcon>
@@ -438,9 +423,7 @@ export default function AnalyticsSecciones() {
                         </Text>
                       </Table.Td>
                       <Table.Td>
-                        <Text size="sm">
-                          {page.unique_visitors}
-                        </Text>
+                        <Text size="sm">{page.unique_visitors}</Text>
                       </Table.Td>
                       <Table.Td>
                         <Badge size="sm" color="grape" variant="light">
@@ -466,77 +449,80 @@ export default function AnalyticsSecciones() {
 
           {/* Análisis de Comportamiento */}
           <Paper withBorder p="lg">
-            <Title order={2} size="h3" mb="md">Análisis de Comportamiento</Title>
+            <Title order={2} size="h3" mb="md">
+              Análisis de Comportamiento
+            </Title>
             <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
-              {/* Páginas más populares por tipo */}
+              
               <Card shadow="sm" p="md" radius="md" withBorder>
-                <Title order={4} size="h5" mb="md" c="blue">Páginas Administrativas</Title>
+                <Title order={4} size="h5" mb="md" c="green">
+                  Páginas Públicas
+                </Title>
                 <Stack gap="sm">
                   {visitStats.popularPages
-                    .filter(page => page.page_path.includes('/admin'))
+                    .filter(
+                      (page) =>
+                        !page.page_path.includes("/admin") &&
+                        !page.page_path.includes("/api")
+                    )
                     .slice(0, 5)
                     .map((page, index) => (
-                    <Group key={index} justify="space-between">
-                      <Text size="sm" lineClamp={1}>
-                        {page.page_title || page.page_path}
-                      </Text>
-                      <Badge size="xs" color="blue">
-                        {page.visit_count}
-                      </Badge>
-                    </Group>
-                  ))}
-                  {visitStats.popularPages.filter(page => page.page_path.includes('/admin')).length === 0 && (
-                    <Text size="sm" c="dimmed">No hay páginas administrativas en el ranking</Text>
-                  )}
+                      <Group key={index} justify="space-between">
+                        <Text size="sm" lineClamp={1}>
+                          {page.page_title || page.page_path}
+                        </Text>
+                        <Badge size="xs" color="green">
+                          {page.visit_count}
+                        </Badge>
+                      </Group>
+                    ))}
                 </Stack>
               </Card>
 
               <Card shadow="sm" p="md" radius="md" withBorder>
-                <Title order={4} size="h5" mb="md" c="green">Páginas Públicas</Title>
-                <Stack gap="sm">
-                  {visitStats.popularPages
-                    .filter(page => !page.page_path.includes('/admin') && !page.page_path.includes('/api'))
-                    .slice(0, 5)
-                    .map((page, index) => (
-                    <Group key={index} justify="space-between">
-                      <Text size="sm" lineClamp={1}>
-                        {page.page_title || page.page_path}
-                      </Text>
-                      <Badge size="xs" color="green">
-                        {page.visit_count}
-                      </Badge>
-                    </Group>
-                  ))}
-                </Stack>
-              </Card>
-
-              <Card shadow="sm" p="md" radius="md" withBorder>
-                <Title order={4} size="h5" mb="md" c="orange">Estadísticas Clave</Title>
+                <Title order={4} size="h5" mb="md" c="orange">
+                  Estadísticas Clave
+                </Title>
                 <Stack gap="md">
                   <Box>
-                    <Text size="xs" c="dimmed" mb="xs">PÁGINAS CON MÁS DE 10% TRÁFICO</Text>
-                    <Text fw={700} size="lg" c="orange">
-                      {visitStats.popularPages.filter(page => parseFloat(page.percentage) > 10).length}
+                    <Text size="xs" c="dimmed" mb="xs">
+                      PÁGINAS CON MÁS DE 10% TRÁFICO
                     </Text>
-                  </Box>
-                  
-                  <Box>
-                    <Text size="xs" c="dimmed" mb="xs">PROMEDIO VISITAS/PÁGINA</Text>
                     <Text fw={700} size="lg" c="orange">
-                      {visitStats.popularPages.length > 0 
-                        ? Math.round(visitStats.popularPages.reduce((acc, page) => acc + page.visit_count, 0) / visitStats.popularPages.length)
-                        : 0
+                      {
+                        visitStats.popularPages.filter(
+                          (page) => parseFloat(page.percentage) > 10
+                        ).length
                       }
                     </Text>
                   </Box>
-                  
+
                   <Box>
-                    <Text size="xs" c="dimmed" mb="xs">TASA DE CONCENTRACIÓN</Text>
+                    <Text size="xs" c="dimmed" mb="xs">
+                      PROMEDIO VISITAS/PÁGINA
+                    </Text>
+                    <Text fw={700} size="lg" c="orange">
+                      {visitStats.generalStats?.total_visits && visitStats.generalStats?.unique_pages
+                        ? Math.round(
+                            parseInt(visitStats.generalStats.total_visits) / 
+                            parseInt(visitStats.generalStats.unique_pages)
+                          )
+                        : 0}
+                    </Text>
+                  </Box>
+
+                  <Box>
+                    <Text size="xs" c="dimmed" mb="xs">
+                      TASA DE CONCENTRACIÓN
+                    </Text>
                     <Text fw={700} size="lg" c="orange">
                       {visitStats.popularPages.length > 0
-                        ? `${((visitStats.popularPages[0]?.percentage || 0) / 100 * visitStats.popularPages.length).toFixed(1)}x`
-                        : '0x'
-                      }
+                        ? `${(
+                            ((visitStats.popularPages[0]?.percentage || 0) /
+                              100) *
+                            visitStats.popularPages.length
+                          ).toFixed(1)}x`
+                        : "0x"}
                     </Text>
                   </Box>
                 </Stack>

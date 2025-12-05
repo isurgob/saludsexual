@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import {
   Container,
   Grid,
@@ -20,9 +20,9 @@ import {
   Divider,
   ActionIcon,
   Tooltip,
-  LoadingOverlay
-} from '@mantine/core';
-import LoadingScreen from '../../components/LoadingScreen';
+  LoadingOverlay,
+} from "@mantine/core";
+import LoadingScreen from "../../components/LoadingScreen";
 import {
   IconUsers,
   IconEye,
@@ -37,26 +37,26 @@ import {
   IconRefresh,
   IconTrendingUp,
   IconClock,
-  IconDeviceDesktop
-} from '@tabler/icons-react';
-import { useRouter } from 'next/router';
-import DateRangeFilter from '../../components/admin/DateRangeFilter';
+  IconDeviceDesktop,
+} from "@tabler/icons-react";
+import { useRouter } from "next/router";
+import DateRangeFilter from "../../components/admin/DateRangeFilter";
 
 export default function MapasAnalytics() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [mapStats, setMapStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [timeframe, setTimeframe] = useState('30');
+  const [timeframe, setTimeframe] = useState("30");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [isDateRangeActive, setIsDateRangeActive] = useState(false);
 
   // Verificar autenticación
   useEffect(() => {
-    if (status === 'loading') return;
+    if (status === "loading") return;
     if (!session) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [session, status, router]);
 
@@ -64,19 +64,19 @@ export default function MapasAnalytics() {
   const loadMapStats = async () => {
     try {
       setLoading(true);
-      
-      let url = '/api/analytics/map-stats';
+
+      let url = "/api/analytics/map-stats";
       const params = new URLSearchParams();
-      
+
       if (isDateRangeActive && startDate && endDate) {
-        params.append('startDate', startDate.toISOString().split('T')[0]);
-        params.append('endDate', endDate.toISOString().split('T')[0]);
+        params.append("startDate", startDate.toISOString().split("T")[0]);
+        params.append("endDate", endDate.toISOString().split("T")[0]);
       } else {
-        params.append('days', timeframe);
+        params.append("days", timeframe);
       }
-      
-      url += '?' + params.toString();
-      
+
+      url += "?" + params.toString();
+
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
@@ -85,7 +85,7 @@ export default function MapasAnalytics() {
         setMapStats(null);
       }
     } catch (error) {
-      console.error('Error cargando estadísticas:', error);
+      console.error("Error cargando estadísticas:", error);
       setMapStats(null);
     } finally {
       setLoading(false);
@@ -102,37 +102,31 @@ export default function MapasAnalytics() {
     setEndDate(end);
     setIsDateRangeActive(true);
     // Desactivar timeframe cuando se usa rango personalizado
-    setTimeframe('');
+    setTimeframe("");
   };
 
-  // Limpiar filtro de fechas
+  // Limpiar filtro de fechas (desde DateRangeFilter)
   const handleClearDateRange = () => {
     setStartDate(null);
     setEndDate(null);
     setIsDateRangeActive(false);
-    // Volver al timeframe por defecto
-    setTimeframe('30');
-  };
-
-  // Función de exportación (placeholder)
-  const exportData = () => {
-    // TODO: Implementar exportación de datos
-    console.log('Exportar datos del mapa');
+    // Volver al timeframe por defecto solo cuando se limpia desde el DateRangeFilter
+    setTimeframe("30");
   };
 
   // Loading state
-  if (status === 'loading') {
+  if (status === "loading") {
     return (
-      <LoadingScreen 
+      <LoadingScreen
         message="Verificando autenticación..."
         showBackButton={false}
       />
     );
   }
-  
+
   if (!session) {
     return (
-      <LoadingScreen 
+      <LoadingScreen
         message="Redirigiendo al login..."
         showBackButton={true}
         backHref="/login"
@@ -147,46 +141,53 @@ export default function MapasAnalytics() {
       <Group justify="space-between" mb="xl">
         <Box>
           <Breadcrumbs separator=">" mb="sm">
-            <Anchor onClick={() => router.push('/admin/dashboard')}>
+            <Anchor onClick={() => router.push("/admin/dashboard")}>
               Tablero
             </Anchor>
-            <Text>étricas del Mapa</Text>
+            <Text>Métricas del Mapa</Text>
           </Breadcrumbs>
           <Group gap="xs" mb="xs">
-            <ActionIcon 
-              variant="subtle" 
+            <ActionIcon
+              variant="subtle"
               size="lg"
-              onClick={() => router.push('/admin/dashboard')}
+              onClick={() => router.push("/admin/dashboard")}
             >
               <IconChevronLeft size={20} />
             </ActionIcon>
-            <Title order={1} size="h2">Métricas Avanzadas del Mapa</Title>
+            <Title order={1} size="h2">
+              Métricas Avanzadas del Mapa
+            </Title>
           </Group>
           <Text size="sm" c="dimmed">
-            Análisis detallado de todas las interacciones con el mapa interactivo de centros de salud
+            Análisis detallado de todas las interacciones con el mapa
+            interactivo de centros de salud
           </Text>
         </Box>
 
         <Group gap="xs">
           <Select
             data={[
-              { value: '1', label: 'Último día' },
-              { value: '7', label: 'Última semana' },
-              { value: '30', label: 'Últimos 30 días' },
-              { value: '90', label: 'Últimos 3 meses' },
+              { value: "1", label: "Último día" },
+              { value: "7", label: "Última semana" },
+              { value: "30", label: "Últimos 30 días" },
+              { value: "90", label: "Últimos 3 meses" },
             ]}
             value={timeframe}
             onChange={(value) => {
-              setTimeframe(value);
               if (value) {
-                handleClearDateRange();
+                // Primero limpiar las fechas personalizadas
+                setStartDate(null);
+                setEndDate(null);
+                setIsDateRangeActive(false);
+                // Luego aplicar el nuevo timeframe
+                setTimeframe(value);
               }
             }}
             leftSection={<IconCalendar size={16} />}
             w={180}
             disabled={isDateRangeActive}
           />
-          
+
           <DateRangeFilter
             startDate={startDate}
             endDate={endDate}
@@ -195,8 +196,8 @@ export default function MapasAnalytics() {
             disabled={loading}
           />
           <Tooltip label="Refrescar datos">
-            <ActionIcon 
-              variant="light" 
+            <ActionIcon
+              variant="light"
               size="lg"
               onClick={loadMapStats}
               loading={loading}
@@ -216,7 +217,7 @@ export default function MapasAnalytics() {
       </Group>
 
       {loading ? (
-        <LoadingScreen 
+        <LoadingScreen
           message="Cargando métricas del mapa..."
           showBackButton={false}
         />
@@ -230,20 +231,29 @@ export default function MapasAnalytics() {
                   <IconEye size={24} />
                 </ThemeIcon>
                 <Box>
-                  <Text size="xs" tt="uppercase" fw={700} c="dimmed">Total Interacciones</Text>
+                  <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+                    Total Interacciones
+                  </Text>
                   <Text size="xl" fw={700} c="blue.7">
                     {mapStats.generalStats.total_interactions || 0}
                   </Text>
                 </Box>
               </Group>
-              <Text size="sm" c="dimmed">clicks en centros de salud</Text>
+              <Text size="sm" c="dimmed">
+                clicks en centros de salud
+              </Text>
               <Group gap="xs" mt="xs">
                 <IconTrendingUp size={14} />
                 <Text size="xs" c="blue.6">
-                  {mapStats.generalStats.total_interactions && mapStats.generalStats.unique_users 
-                    ? Math.round((mapStats.generalStats.total_interactions / mapStats.generalStats.unique_users) * 100) / 100
-                    : 0
-                  } promedio por usuario
+                  {mapStats.generalStats.total_interactions &&
+                  mapStats.generalStats.unique_users
+                    ? Math.round(
+                        (mapStats.generalStats.total_interactions /
+                          mapStats.generalStats.unique_users) *
+                          100
+                      ) / 100
+                    : 0}{" "}
+                  promedio por usuario
                 </Text>
               </Group>
             </Paper>
@@ -254,20 +264,29 @@ export default function MapasAnalytics() {
                   <IconSearch size={24} />
                 </ThemeIcon>
                 <Box>
-                  <Text size="xs" tt="uppercase" fw={700} c="dimmed">Total Búsquedas</Text>
+                  <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+                    Total Búsquedas
+                  </Text>
                   <Text size="xl" fw={700} c="grape.7">
                     {mapStats.generalStats.total_searches || 0}
                   </Text>
                 </Box>
               </Group>
-              <Text size="sm" c="dimmed">búsquedas realizadas</Text>
+              <Text size="sm" c="dimmed">
+                búsquedas realizadas
+              </Text>
               <Group gap="xs" mt="xs">
                 <IconTrendingUp size={14} />
                 <Text size="xs" c="grape.6">
-                  {mapStats.generalStats.total_searches && mapStats.generalStats.unique_users
-                    ? Math.round((mapStats.generalStats.total_searches / mapStats.generalStats.unique_users) * 100)
-                    : 0
-                  }% de usuarios buscan
+                  {mapStats.generalStats.total_searches &&
+                  mapStats.generalStats.unique_users
+                    ? Math.round(
+                        (mapStats.generalStats.total_searches /
+                          mapStats.generalStats.unique_users) *
+                          100
+                      ) / 100
+                    : 0}{" "}
+                  búsquedas por usuario
                 </Text>
               </Group>
             </Paper>
@@ -278,20 +297,29 @@ export default function MapasAnalytics() {
                   <IconExternalLink size={24} />
                 </ThemeIcon>
                 <Box>
-                  <Text size="xs" tt="uppercase" fw={700} c="dimmed">Direcciones Solicitadas</Text>
+                  <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+                    Direcciones Solicitadas
+                  </Text>
                   <Text size="xl" fw={700} c="teal.7">
                     {mapStats.generalStats.total_direction_requests || 0}
                   </Text>
                 </Box>
               </Group>
-              <Text size="sm" c="dimmed">solicitudes de rutas</Text>
+              <Text size="sm" c="dimmed">
+                solicitudes de rutas
+              </Text>
               <Group gap="xs" mt="xs">
                 <IconTrendingUp size={14} />
                 <Text size="xs" c="teal.6">
-                  {mapStats.generalStats.total_direction_requests && mapStats.generalStats.total_interactions
-                    ? Math.round((mapStats.generalStats.total_direction_requests / mapStats.generalStats.total_interactions) * 100)
-                    : 0
-                  }% de conversión
+                  {mapStats.generalStats.total_direction_requests &&
+                  mapStats.generalStats.total_interactions
+                    ? Math.round(
+                        (mapStats.generalStats.total_direction_requests /
+                          mapStats.generalStats.total_interactions) *
+                          100
+                      )
+                    : 0}
+                  % de conversión
                 </Text>
               </Group>
             </Paper>
@@ -302,17 +330,21 @@ export default function MapasAnalytics() {
                   <IconUsers size={24} />
                 </ThemeIcon>
                 <Box>
-                  <Text size="xs" tt="uppercase" fw={700} c="dimmed">Usuarios Únicos</Text>
+                  <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+                    Usuarios Diferentes
+                  </Text>
                   <Text size="xl" fw={700} c="orange.7">
                     {mapStats.generalStats.unique_users || 0}
                   </Text>
                 </Box>
               </Group>
-              <Text size="sm" c="dimmed">sesiones diferentes</Text>
+              <Text size="sm" c="dimmed">
+                sesiones diferentes
+              </Text>
               <Group gap="xs" mt="xs">
                 <IconDeviceDesktop size={14} />
                 <Text size="xs" c="orange.6">
-                  {mapStats?.period || 'Período no definido'}
+                  {mapStats?.period || "Período no definido"}
                 </Text>
               </Group>
             </Paper>
@@ -331,23 +363,38 @@ export default function MapasAnalytics() {
                 </Group>
                 <Stack gap="lg">
                   {mapStats.mostClickedCenters.map((center, index) => (
-                    <Box key={index} p="md" bg={index === 0 ? 'blue.0' : 'gray.0'} radius="md">
+                    <Box
+                      key={index}
+                      p="md"
+                      bg={index === 0 ? "blue.0" : "gray.0"}
+                      radius="md"
+                    >
                       <Group justify="space-between" align="center">
                         <Box style={{ flex: 1 }}>
                           <Group gap="sm" mb="sm">
-                            <Badge size="md" variant="filled" color={index === 0 ? 'blue' : 'gray'}>
+                            <Badge
+                              size="md"
+                              variant="filled"
+                              color={index === 0 ? "blue" : "gray"}
+                            >
                               #{index + 1}
                             </Badge>
-                            <Text size="md" fw={600}>{center.center_name}</Text>
+                            <Text size="md" fw={600}>
+                              {center.center_name}
+                            </Text>
                           </Group>
                           <Group gap="xl">
                             <Group gap="xs">
                               <IconMapPin size={16} />
-                              <Text size="sm" c="dimmed">{center.center_type}</Text>
+                              <Text size="sm" c="dimmed">
+                                {center.center_type}
+                              </Text>
                             </Group>
                             <Group gap="xs">
                               <IconUsers size={16} />
-                              <Text size="sm" c="dimmed">{center.unique_sessions} usuarios únicos</Text>
+                              <Text size="sm" c="dimmed">
+                                {center.unique_sessions} usuarios diferentes
+                              </Text>
                             </Group>
                           </Group>
                         </Box>
@@ -355,7 +402,9 @@ export default function MapasAnalytics() {
                           <Text size="xl" fw={700} c="blue">
                             {center.total_clicks}
                           </Text>
-                          <Text size="sm" c="dimmed">clicks</Text>
+                          <Text size="sm" c="dimmed">
+                            clicks
+                          </Text>
                         </Box>
                       </Group>
                     </Box>
@@ -380,23 +429,38 @@ export default function MapasAnalytics() {
                 </Group>
                 <Stack gap="lg">
                   {mapStats.mostRequestedDirections.map((direction, index) => (
-                    <Box key={index} p="md" bg={index === 0 ? 'teal.0' : 'gray.0'} radius="md">
+                    <Box
+                      key={index}
+                      p="md"
+                      bg={index === 0 ? "teal.0" : "gray.0"}
+                      radius="md"
+                    >
                       <Group justify="space-between" align="center">
                         <Box style={{ flex: 1 }}>
                           <Group gap="sm" mb="sm">
-                            <Badge size="md" variant="filled" color={index === 0 ? 'teal' : 'gray'}>
+                            <Badge
+                              size="md"
+                              variant="filled"
+                              color={index === 0 ? "teal" : "gray"}
+                            >
                               #{index + 1}
                             </Badge>
-                            <Text size="md" fw={600}>{direction.center_name}</Text>
+                            <Text size="md" fw={600}>
+                              {direction.center_name}
+                            </Text>
                           </Group>
                           <Group gap="xl">
                             <Group gap="xs">
                               <IconMapPin size={16} />
-                              <Text size="sm" c="dimmed">{direction.center_type}</Text>
+                              <Text size="sm" c="dimmed">
+                                {direction.center_type}
+                              </Text>
                             </Group>
                             <Group gap="xs">
                               <IconUsers size={16} />
-                              <Text size="sm" c="dimmed">{direction.unique_users} usuarios únicos</Text>
+                              <Text size="sm" c="dimmed">
+                                {direction.unique_users} usuarios diferentes
+                              </Text>
                             </Group>
                           </Group>
                         </Box>
@@ -404,7 +468,9 @@ export default function MapasAnalytics() {
                           <Text size="xl" fw={700} c="teal">
                             {direction.direction_requests}
                           </Text>
-                          <Text size="sm" c="dimmed">direcciones</Text>
+                          <Text size="sm" c="dimmed">
+                            direcciones
+                          </Text>
                         </Box>
                       </Group>
                     </Box>
@@ -429,24 +495,40 @@ export default function MapasAnalytics() {
                 </Group>
                 <Stack gap="lg">
                   {mapStats.topSearches.map((search, index) => (
-                    <Box key={index} p="md" bg={index === 0 ? 'grape.0' : 'gray.0'} radius="md">
+                    <Box
+                      key={index}
+                      p="md"
+                      bg={index === 0 ? "grape.0" : "gray.0"}
+                      radius="md"
+                    >
                       <Group justify="space-between" align="center">
                         <Box style={{ flex: 1 }}>
                           <Group gap="sm" mb="sm">
-                            <Badge size="md" variant="filled" color={index === 0 ? 'grape' : 'gray'}>
+                            <Badge
+                              size="md"
+                              variant="filled"
+                              color={index === 0 ? "grape" : "gray"}
+                            >
                               #{index + 1}
                             </Badge>
-                            <Text size="md" fw={600}>&quot;{search.search_query}&quot;</Text>
+                            <Text size="md" fw={600}>
+                              &quot;{search.search_query}&quot;
+                            </Text>
                           </Group>
                           <Group gap="xl">
                             <Group gap="xs">
                               <IconUsers size={16} />
-                              <Text size="sm" c="dimmed">{search.unique_users} usuarios</Text>
+                              <Text size="sm" c="dimmed">
+                                {search.unique_users} usuarios
+                              </Text>
                             </Group>
                             <Group gap="xs">
                               <IconActivity size={16} />
                               <Text size="sm" c="dimmed">
-                                {search.avg_results ? Math.round(search.avg_results) : 0} resultados promedio
+                                {search.avg_results
+                                  ? Math.round(search.avg_results)
+                                  : 0}{" "}
+                                resultados promedio
                               </Text>
                             </Group>
                           </Group>
@@ -455,7 +537,9 @@ export default function MapasAnalytics() {
                           <Text size="xl" fw={700} c="grape">
                             {search.search_count}
                           </Text>
-                          <Text size="sm" c="dimmed">búsquedas</Text>
+                          <Text size="sm" c="dimmed">
+                            búsquedas
+                          </Text>
                         </Box>
                       </Group>
                     </Box>
@@ -480,23 +564,38 @@ export default function MapasAnalytics() {
                 </Group>
                 <Stack gap="lg">
                   {mapStats.popularFilters.map((filter, index) => (
-                    <Box key={index} p="md" bg={index === 0 ? 'orange.0' : 'gray.0'} radius="md">
+                    <Box
+                      key={index}
+                      p="md"
+                      bg={index === 0 ? "orange.0" : "gray.0"}
+                      radius="md"
+                    >
                       <Group justify="space-between" align="center">
                         <Box style={{ flex: 1 }}>
                           <Group gap="sm" mb="sm">
-                            <Badge size="md" variant="filled" color={index === 0 ? 'orange' : 'gray'}>
+                            <Badge
+                              size="md"
+                              variant="filled"
+                              color={index === 0 ? "orange" : "gray"}
+                            >
                               #{index + 1}
                             </Badge>
-                            <Text size="md" fw={600}>{filter.filter_value}</Text>
+                            <Text size="md" fw={600}>
+                              {filter.filter_value}
+                            </Text>
                           </Group>
                           <Group gap="xl">
                             <Group gap="xs">
                               <IconFilter size={16} />
-                              <Text size="sm" c="dimmed">{filter.filter_type}</Text>
+                              <Text size="sm" c="dimmed">
+                                {filter.filter_type}
+                              </Text>
                             </Group>
                             <Group gap="xs">
                               <IconUsers size={16} />
-                              <Text size="sm" c="dimmed">{filter.unique_users} usuarios</Text>
+                              <Text size="sm" c="dimmed">
+                                {filter.unique_users} usuarios
+                              </Text>
                             </Group>
                           </Group>
                         </Box>
@@ -504,7 +603,9 @@ export default function MapasAnalytics() {
                           <Text size="xl" fw={700} c="orange">
                             {filter.usage_count}
                           </Text>
-                          <Text size="sm" c="dimmed">usos</Text>
+                          <Text size="sm" c="dimmed">
+                            usos
+                          </Text>
                         </Box>
                       </Group>
                     </Box>
@@ -521,7 +622,9 @@ export default function MapasAnalytics() {
 
           {/* Estadísticas de Rendimiento */}
           <Card shadow="sm" p="xl" radius="md" withBorder mt="xl">
-            <Title order={3} mb="xl">Métricas de Rendimiento</Title>
+            <Title order={3} mb="xl">
+              Métricas de Rendimiento
+            </Title>
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="xl">
               <Box ta="center" p="lg" bg="blue.0" radius="md">
                 <ThemeIcon size="xl" variant="light" color="blue" mb="md">
@@ -531,12 +634,18 @@ export default function MapasAnalytics() {
                   Tasa de Interacción
                 </Text>
                 <Text size="2xl" fw={700} c="blue">
-                  {mapStats.generalStats.total_interactions && mapStats.generalStats.unique_users 
-                    ? Math.round((mapStats.generalStats.total_interactions / mapStats.generalStats.unique_users) * 100) / 100
-                    : 0
-                  }
+                  {mapStats.generalStats.total_interactions &&
+                  mapStats.generalStats.unique_users
+                    ? Math.round(
+                        (mapStats.generalStats.total_interactions /
+                          mapStats.generalStats.unique_users) *
+                          100
+                      ) / 100
+                    : 0}
                 </Text>
-                <Text size="sm" c="dimmed">clicks por usuario</Text>
+                <Text size="sm" c="dimmed">
+                  clicks por usuario
+                </Text>
               </Box>
 
               <Box ta="center" p="lg" bg="grape.0" radius="md">
@@ -544,15 +653,21 @@ export default function MapasAnalytics() {
                   <IconSearch size={24} />
                 </ThemeIcon>
                 <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb="xs">
-                  Tasa de Búsqueda
+                  Promedio de Búsquedas
                 </Text>
                 <Text size="2xl" fw={700} c="grape">
-                  {mapStats.generalStats.total_searches && mapStats.generalStats.unique_users
-                    ? Math.round((mapStats.generalStats.total_searches / mapStats.generalStats.unique_users) * 100)
-                    : 0
-                  }%
+                  {mapStats.generalStats.total_searches &&
+                  mapStats.generalStats.unique_users
+                    ? Math.round(
+                        (mapStats.generalStats.total_searches /
+                          mapStats.generalStats.unique_users) *
+                          100
+                      ) / 100
+                    : 0}
                 </Text>
-                <Text size="sm" c="dimmed">usuarios que buscan</Text>
+                <Text size="sm" c="dimmed">
+                  búsquedas por usuario
+                </Text>
               </Box>
 
               <Box ta="center" p="lg" bg="teal.0" radius="md">
@@ -563,12 +678,19 @@ export default function MapasAnalytics() {
                   Tasa de Conversión
                 </Text>
                 <Text size="2xl" fw={700} c="teal">
-                  {mapStats.generalStats.total_direction_requests && mapStats.generalStats.total_interactions
-                    ? Math.round((mapStats.generalStats.total_direction_requests / mapStats.generalStats.total_interactions) * 100)
-                    : 0
-                  }%
+                  {mapStats.generalStats.total_direction_requests &&
+                  mapStats.generalStats.total_interactions
+                    ? Math.round(
+                        (mapStats.generalStats.total_direction_requests /
+                          mapStats.generalStats.total_interactions) *
+                          100
+                      )
+                    : 0}
+                  %
                 </Text>
-                <Text size="sm" c="dimmed">conversión a direcciones</Text>
+                <Text size="sm" c="dimmed">
+                  conversión a direcciones
+                </Text>
               </Box>
 
               <Box ta="center" p="lg" bg="green.0" radius="md">
@@ -579,15 +701,23 @@ export default function MapasAnalytics() {
                   Engagement Score
                 </Text>
                 <Text size="2xl" fw={700} c="green">
-                  {mapStats.generalStats.total_interactions && mapStats.generalStats.unique_users
-                    ? Math.min(100, Math.round(
-                        ((mapStats.generalStats.total_interactions + mapStats.generalStats.total_searches + mapStats.generalStats.total_direction_requests) 
-                        / mapStats.generalStats.unique_users) * 10
-                      ))
-                    : 0
-                  }
+                  {mapStats.generalStats.total_interactions &&
+                  mapStats.generalStats.unique_users
+                    ? Math.min(
+                        100,
+                        Math.round(
+                          ((mapStats.generalStats.total_interactions +
+                            mapStats.generalStats.total_searches +
+                            mapStats.generalStats.total_direction_requests) /
+                            mapStats.generalStats.unique_users) *
+                            10
+                        )
+                      )
+                    : 0}
                 </Text>
-                <Text size="sm" c="dimmed">de 100 puntos</Text>
+                <Text size="sm" c="dimmed">
+                  de 100 puntos
+                </Text>
               </Box>
             </SimpleGrid>
           </Card>
@@ -597,8 +727,12 @@ export default function MapasAnalytics() {
             <Group gap="xs">
               <IconClock size={16} />
               <Text size="xs" c="dimmed">
-                Datos actualizados para el período: {mapStats?.period || 'Período no definido'} - 
-                Última actualización: {mapStats?.lastUpdated ? new Date(mapStats.lastUpdated).toLocaleString('es-AR') : 'No disponible'}
+                Datos actualizados para el período:{" "}
+                {mapStats?.period || "Período no definido"} - Última
+                actualización:{" "}
+                {mapStats?.lastUpdated
+                  ? new Date(mapStats.lastUpdated).toLocaleString("es-AR")
+                  : "No disponible"}
               </Text>
             </Group>
           </Card>

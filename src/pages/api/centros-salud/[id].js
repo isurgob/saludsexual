@@ -1,4 +1,4 @@
-import { getCentroSaludById, updateCentroSalud, deleteCentroSalud, deleteCentroServicios, insertCentroServicio } from '../../../service/centrosSaludService.js';
+import { getCentroSaludById, updateCentroSalud, deleteCentroSalud, deleteCentroServicios, insertCentroServicio } from '../../../services/centrosSaludService.js';
 
 // API route para CRUD de un centro de salud específico
 export default async function handler(req, res) {
@@ -36,12 +36,10 @@ export default async function handler(req, res) {
 
 // Manejar GET - Obtener centro específico por ID
 async function handleGet(req, res, centroId) {
-  console.log(`🔍 API: Obteniendo centro con ID: ${centroId}`);
   
   const centro = await getCentroSaludById(centroId);
   
   if (!centro) {
-    console.log(`❌ Centro con ID ${centroId} no encontrado`);
     return res.status(404).json({ message: 'Centro de salud no encontrado' });
   }
 
@@ -65,9 +63,6 @@ async function handleGet(req, res, centroId) {
     servicios: centro.servicios ? centro.servicios.split(', ') : [],
     color: centro.color
   };
-
-  console.log(`✅ Centro formateado - ID: ${centroFormatted.id}, categoria_id: ${centroFormatted.categoria_id}, tipo_id: ${centroFormatted.tipo_id}, servicios_ids: [${centroFormatted.servicios_ids.join(', ')}]`);
-
   res.status(200).json(centroFormatted);
 }
 
@@ -85,17 +80,6 @@ async function handlePut(req, res, centroId) {
     tipo_id,
     servicios_ids
   } = req.body;
-
-  console.log('🔍 Datos recibidos para actualizar:', {
-    nombre,
-    direccion,
-    telefono,
-    latitud,
-    longitud,
-    categoria_id,
-    tipo_id,
-    servicios_ids
-  });
 
   // Validaciones estrictas - campos obligatorios
   const errores = [];
@@ -145,8 +129,6 @@ async function handlePut(req, res, centroId) {
     return res.status(404).json({ message: 'Centro de salud no encontrado' });
   }
 
-  console.log('🔧 Iniciando actualización completa del centro...');
-
   // Actualizar datos básicos del centro
   const centroActualizado = await updateCentroSalud(centroId, {
     nombre: nombre.trim(),
@@ -161,20 +143,16 @@ async function handlePut(req, res, centroId) {
     servicios_ids: servicios_ids
   });
 
-  console.log('✅ Datos básicos actualizados, ahora actualizando servicios...');
-
   // Actualizar servicios del centro
   try {
     // Primero eliminar servicios existentes (funciones ya importadas al inicio)
     await deleteCentroServicios(centroId);
-    console.log('🗑️ Servicios existentes eliminados');
 
     // Insertar nuevos servicios
     if (servicios_ids && Array.isArray(servicios_ids) && servicios_ids.length > 0) {
       for (const servicioId of servicios_ids) {
         await insertCentroServicio(centroId, parseInt(servicioId));
       }
-      console.log(`✅ ${servicios_ids.length} servicios insertados`);
     }
   } catch (serviciosError) {
     console.error('❌ Error actualizando servicios:', serviciosError);

@@ -23,6 +23,8 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+
+
 /* Divisor simple */
 .divider {
   height: 1px;
@@ -167,6 +169,8 @@
     font-size: 0.8rem;
   }
 }
+
+
 
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {

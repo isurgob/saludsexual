@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import jwt from 'jsonwebtoken';
-import pool from '@/config/db';
+import { query } from '@/config/db';
 
 export default NextAuth({
   debug: process.env.NODE_ENV === 'development',
@@ -26,11 +26,10 @@ export default NextAuth({
         }
 
         try {
-          console.log('🔐 Autenticando usuario:', credentials.correo);
           
           // SEGURIDAD: Las contraseñas llegan ya hasheadas desde el frontend
           // Buscar usuario directamente con contraseña hasheada
-          const result = await pool.query(
+          const result = await query(
             `SELECT id, nombre, apellido, correo, rol, estado 
              FROM usuarios 
              WHERE LOWER(correo) = LOWER($1) AND contraseña = $2 AND estado = 1`,
@@ -38,22 +37,18 @@ export default NextAuth({
           );
 
           if (result.rows.length === 0) {
-            console.log('❌ Credenciales inválidas para:', credentials.correo);
             throw new Error('Credenciales inválidas');
           }
 
           const usuario = result.rows[0];
-          console.log('✅ Usuario encontrado:', usuario.correo, 'Rol:', usuario.rol);
 
           // Verificar que el usuario esté activo (estado = 1 significa activo)
           if (usuario.estado != 1) {
-            console.log('❌ Usuario inactivo:', usuario.correo);
             throw new Error('Usuario inactivo');
           }
 
           // Verificar que sea admin (rol = 1) o moderador (rol = 2)
           if (usuario.rol != 1 && usuario.rol != 2) {
-            console.log('❌ Permisos insuficientes. Rol:', usuario.rol);
             throw new Error('No tienes permisos para acceder');
           }
 
@@ -65,7 +60,6 @@ export default NextAuth({
             roleName: usuario.rol === 1 ? 'admin' : 'moderator'
           };
 
-          console.log('✅ Login exitoso para:', userResult.name);
           return userResult;
         } catch (error) {
           console.error('❌ Error en autenticación:', error);

@@ -1,4 +1,4 @@
-import { getCategorias } from '../../service/metadataService.js';
+import { getCategorias } from '../../services/metadataService.js';
 
 // API route para obtener categorías
 export default async function handler(req, res) {

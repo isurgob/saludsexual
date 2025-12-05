@@ -1,9 +1,9 @@
 /* Floating Chat Button Styles */
 .floatingButton {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 1001 !important;
   box-shadow: 0 4px 20px rgba(74, 144, 226, 0.4);
   transition: all 0.3s ease;
   border: 3px solid white;
@@ -103,50 +103,70 @@
   max-width: 80%;
 }
 
-/* Responsive Design */
+/* Universal Responsive Design - Works on all devices */
+.floatingButton {
+  position: fixed !important;
+  right: 20px !important;
+  z-index: 10000 !important;
+  width: clamp(50px, 8vw, 70px);
+  height: clamp(50px, 8vw, 70px);
+  min-width: 50px;
+  min-height: 50px;
+  transition: bottom 0.3s ease !important;
+}
+
+.chatWidget {
+  position: fixed !important;
+  z-index: 9999 !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Mobile-first approach */
 @media (max-width: 768px) {
-  .floatingButton {
-    bottom: 15px;
-    right: 15px;
-    width: 50px;
-    height: 50px;
-  }
-  
   .chatWidget {
-    bottom: 75px;
-    right: 10px;
-    left: 10px;
-    width: calc(100vw - 20px);
-    max-width: 400px;
-    height: 85vh;
-  }
-  
-  .chatMessages {
-    height: calc(85vh - 160px);
-    min-height: 450px;
+    bottom: 90px !important;
+    left: 5vw !important;
+    right: 5vw !important;
+    width: 90vw !important;
+    max-width: 90vw !important;
+    height: 65vh !important;
+    max-height: 65vh !important;
   }
 }
 
-@media (max-width: 480px) {
-  .floatingButton {
-    bottom: 10px;
-    right: 10px;
-    width: 50px;
-    height: 50px;
-  }
-  
+/* Desktop */
+@media (min-width: 769px) {
   .chatWidget {
-    bottom: 70px;
-    right: 10px;
-    left: 10px;
-    width: calc(100vw - 20px);
-    max-width: 380px;
-    height: 90vh;
+    bottom: 105px !important;
+    right: 20px !important;
+    left: auto !important;
+    width: 350px !important;
+    max-width: 350px !important;
+    height: 500px !important;
+    max-height: 500px !important;
   }
-  
-  .chatMessages {
-    height: calc(90vh - 160px);
-    min-height: 500px;
+}
+
+/* Very small screens - emergency fallback */
+@media (max-width: 320px) {
+  .chatWidget {
+    left: 2vw !important;
+    right: 2vw !important;
+    width: 96vw !important;
+    height: 60vh !important;
+    max-height: 60vh !important;
+    bottom: 80px !important;
+  }
+}
+
+/* Short screens (landscape phones) */
+@media (max-height: 500px) {
+  .chatWidget {
+    height: 70vh !important;
+    max-height: 70vh !important;
+    bottom: 70px !important;
   }
 }
 
@@ -185,19 +205,56 @@
   color: #495057;
 }
 
-/* Ensure button stays above other elements */
+/* Ensure button stays above other elements and is always fixed */
 .floatingButton {
-  z-index: 1001;
+  z-index: 1001 !important;
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
 }
 
 .chatWidget {
-  z-index: 1000;
+  z-index: 1000 !important;
+  position: fixed !important;
 }
 
 /* Focus styles for accessibility */
 .floatingButton:focus-visible {
   outline: 2px solid #4A90E2;
   outline-offset: 2px;
+}
+
+/* Force fixed positioning for all screen sizes */
+.floatingButton,
+.floatingButton * {
+  position: fixed !important;
+}
+
+/* Override any Mantine styles that might interfere */
+.floatingButton[data-mantine-component] {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 1001 !important;
+}
+
+/* Additional overrides to ensure fixed positioning works */
+:global(body) .floatingButton {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 1001 !important;
+}
+
+/* For mobile devices - force viewport positioning */
+@supports (-webkit-overflow-scrolling: touch) {
+  .floatingButton {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    z-index: 1001 !important;
+    transform: translate3d(0, 0, 0) !important;
+  }
 }
 
 /* Bot message HTML content styles */
@@ -209,19 +266,20 @@
 .botMessageContent h6 {
   margin: 0 0 0.5rem 0;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.4;
 }
 
-.botMessageContent h1 { font-size: 1.25rem; }
-.botMessageContent h2 { font-size: 1.15rem; }
-.botMessageContent h3 { font-size: 1.1rem; }
-.botMessageContent h4 { font-size: 1.05rem; }
-.botMessageContent h5 { font-size: 1rem; }
-.botMessageContent h6 { font-size: 0.95rem; }
+.botMessageContent h1 { font-size: 1.3rem; }
+.botMessageContent h2 { font-size: 1.2rem; }
+.botMessageContent h3 { font-size: 1.15rem; }
+.botMessageContent h4 { font-size: 1.1rem; }
+.botMessageContent h5 { font-size: 1.05rem; }
+.botMessageContent h6 { font-size: 1rem; }
 
 .botMessageContent p {
   margin: 0 0 0.75rem 0;
-  line-height: 1.4;
+  line-height: 1.5;
+  font-size: inherit;
 }
 
 .botMessageContent p:last-child {
@@ -246,7 +304,8 @@
 
 .botMessageContent li {
   margin-bottom: 0.25rem;
-  line-height: 1.4;
+  line-height: 1.5;
+  font-size: inherit;
 }
 
 .botMessageContent br {

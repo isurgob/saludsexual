@@ -1,4 +1,4 @@
-import { getArticuloById, updateArticulo, deleteArticulo } from '../../../service/articulosService.js';
+import { getArticuloById, updateArticulo, deleteArticulo } from '../../../services/articulosService.js';
 
 // API route para CRUD de un artículo específico por ID
 export default async function handler(req, res) {

@@ -96,17 +96,7 @@ export default function AdminArticles() {
               Edita el contenido de los artículos de salud existentes
             </Text>
           </div>
-          <Group gap="xs">
-            <Button
-              component={Link}
-              href="/admin/migrate-articles"
-              leftSection={<IconDatabase size={16} />}
-              variant="light"
-              color="green"
-            >
-              Migrar Artículos
-            </Button>
-          </Group>
+         
         </Group>
 
         {/* Tabla de artículos */}
@@ -116,7 +106,6 @@ export default function AdminArticles() {
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>Título</Table.Th>
-                  <Table.Th>Slug</Table.Th>
                   <Table.Th>Estado</Table.Th>
                   <Table.Th>Secciones</Table.Th>
                   <Table.Th>Última Actualización</Table.Th>
@@ -131,11 +120,6 @@ export default function AdminArticles() {
                         <IconArticle size={16} color="var(--mantine-color-blue-6)" />
                         <Text fw={500}>{article.title}</Text>
                       </Group>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm" c="dimmed" ff="monospace">
-                        {article.slug}
-                      </Text>
                     </Table.Td>
                     <Table.Td>
                       <Badge 

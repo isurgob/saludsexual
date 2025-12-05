@@ -7,7 +7,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('Initializing analytics table...');
 
     // Crear tabla si no existe
     const createTableQuery = `
@@ -26,7 +25,6 @@ export default async function handler(req, res) {
     `;
 
     await query(createTableQuery);
-    console.log('Table created successfully');
 
     // Crear índices
     const indexes = [
@@ -39,9 +37,8 @@ export default async function handler(req, res) {
     for (const indexQuery of indexes) {
       try {
         await query(indexQuery);
-        console.log('Index created:', indexQuery);
       } catch (err) {
-        console.log('Index might already exist:', err.message);
+        console.error('Error creating index:', err);
       }
     }
 
@@ -50,7 +47,6 @@ export default async function handler(req, res) {
     const count = parseInt(countResult.rows[0].count);
 
     if (count === 0) {
-      console.log('Inserting sample data...');
       
       // Insertar datos de ejemplo
       const sampleData = [];
@@ -76,7 +72,6 @@ export default async function handler(req, res) {
       `;
 
       await query(insertQuery);
-      console.log('Sample data inserted');
     }
 
     // Obtener estadísticas finales

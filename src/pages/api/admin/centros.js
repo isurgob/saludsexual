@@ -1,5 +1,5 @@
-import { getCentroById, updateCentroSalud, createCentroSalud, deleteCentroSalud } from '../../../service/centrosSaludService.js';
-import { getCentroMetadata } from '../../../service/metadataService.js';
+import { getCentroById, updateCentroSalud, createCentroSalud, deleteCentroSalud } from '../../../services/centrosSaludService.js';
+import { getCentroMetadata } from '../../../services/metadataService.js';
 
 export default async function handler(req, res) {
   const { method } = req;

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
   Text,
   Drawer,
+  Stack,
+  Box,
+  ActionIcon,
   useMatches
 } from '@mantine/core';
 import {
@@ -13,7 +16,9 @@ import { useRouter } from 'next/router';
 import classes from './Navbar.module.css';
 
 const navigation = [
+  
   { name: 'Inicio', href: '/' },
+  
   { name: 'Nuestro Trabajo', href: '/proyecto' },
   { name: 'VIH', href: '/vih' },
   { name: 'ITS', href: '/its' },
@@ -114,7 +119,7 @@ const Navbar = () => {
             backgroundColor: 'white',
             padding: '5px'
           }}>
-            <Link href="http://comodoro.gov.ar/salud" target="_blank" rel="noopener noreferrer" style={{ 
+            <Link href="/" style={{ 
               textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
@@ -152,6 +157,7 @@ const Navbar = () => {
                 <Link 
                   key={item.name} 
                   href={item.href} 
+                  className={`${classes.link} ${router.pathname === item.href ? classes.linkActive : ''}`}
                   style={{
                     color: router.pathname === item.href ? '#1B436B' : '#495057',
                     textDecoration: 'none',

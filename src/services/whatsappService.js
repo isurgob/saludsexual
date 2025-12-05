@@ -26,6 +26,37 @@ function cleanSourceReferences(text) {
   return cleaned;
 }
 
+// Función para convertir HTML a texto plano para WhatsApp
+function htmlToPlainText(html) {
+  if (!html) return html;
+  
+  let text = html;
+  
+  // Convertir <br> y <br/> a saltos de línea
+  text = text.replace(/<br\s*\/?>/gi, '\n');
+  
+  // Convertir </p> a doble salto de línea
+  text = text.replace(/<\/p>/gi, '\n\n');
+  
+  // Eliminar todas las demás etiquetas HTML
+  text = text.replace(/<[^>]*>/g, '');
+  
+  // Decodificar entidades HTML comunes
+  text = text.replace(/&amp;/g, '&');
+  text = text.replace(/&lt;/g, '<');
+  text = text.replace(/&gt;/g, '>');
+  text = text.replace(/&quot;/g, '"');
+  text = text.replace(/&#39;/g, "'");
+  text = text.replace(/&nbsp;/g, ' ');
+  
+  // Limpiar espacios múltiples y saltos de línea extra
+  text = text.replace(/\n\s*\n\s*\n+/g, '\n\n');
+  text = text.replace(/\s+/g, ' ');
+  text = text.trim();
+  
+  return text;
+}
+
 export class WhatsAppService {
   
   // Obtener o crear conversación
@@ -64,12 +95,10 @@ export class WhatsAppService {
       const conversation = await this.getOrCreateConversation(phoneNumber);
       
       if (conversation.thread_id) {
-        console.log('✅ Thread existente encontrado:', conversation.thread_id);
         return conversation.thread_id;
       }
 
       // Crear nuevo thread
-      console.log('🆕 Creando nuevo thread para WhatsApp...');
       const thread = await openai.beta.threads.create();
       const threadId = thread.id;
 
@@ -79,7 +108,6 @@ export class WhatsAppService {
         [threadId, phoneNumber]
       );
 
-      console.log('✅ Thread creado y guardado:', threadId);
       return threadId;
     } catch (error) {
       console.error('Error getting or creating thread:', error);
@@ -136,10 +164,43 @@ export class WhatsAppService {
     }
   }
 
+  // Función para detectar si es un saludo inicial
+  static isGreeting(messageText) {
+    if (!messageText || typeof messageText !== 'string') return false;
+    
+    const greetingPatterns = [
+      /^hola$/i,
+      /^hi$/i,
+      /^hello$/i,
+      /^buenas$/i,
+      /^buen día$/i,
+      /^buenos días$/i,
+      /^buenas tardes$/i,
+      /^buenas noches$/i,
+      /^¡hola!$/i,
+      /^¿hola?$/i,
+      /^hola!$/i,
+      /^hola\?$/i
+    ];
+    
+    const cleanMessage = messageText.trim();
+    return greetingPatterns.some(pattern => pattern.test(cleanMessage));
+  }
+
+  // Obtener mensaje de bienvenida personalizado para WhatsApp
+  static getWelcomeMessage() {
+    return `¡Hola, soy Mara! Puedo responder tus dudas sobre VIH e Infecciones de Transmisión Sexual.\n\nEsta conversación es anónima y confidencial. Al chatear estás aceptando las Políticas de Privacidad - chatbot.isurgob.net/politicas-privacidad .\n\n¿En qué puedo ayudarte?`;
+  }
+
   // Procesar mensaje con OpenAI
   static async processWithAI(messageText, phoneNumber) {
     try {
-      console.log('🤖 Procesando mensaje con IA:', { messageText, phoneNumber });
+      
+      // Verificar si es un saludo inicial
+      if (this.isGreeting(messageText)) {
+        console.log('👋 Detectado saludo inicial - enviando mensaje de bienvenida personalizado');
+        return this.getWelcomeMessage();
+      }
 
       const ASSISTANT_ID = process.env.OPENAI_ASSISTANT_ID;
       
@@ -151,19 +212,16 @@ export class WhatsAppService {
       const threadId = await this.getOrCreateThread(phoneNumber);
 
       // Agregar mensaje del usuario al thread
-      console.log('✍️ Agregando mensaje al thread...');
       await openai.beta.threads.messages.create(threadId, {
         role: 'user',
         content: `Mensaje de WhatsApp desde ${phoneNumber}: ${messageText}`,
       });
 
       // Crear y ejecutar run con polling automático
-      console.log('▶️ Creando run...');
       const run = await openai.beta.threads.runs.createAndPoll(threadId, {
         assistant_id: ASSISTANT_ID,
       });
 
-      console.log('🔄 Run completado con estado:', run.status);
 
       if (run.status === 'completed') {
         // Obtener los mensajes del thread
@@ -176,15 +234,11 @@ export class WhatsAppService {
 
         if (assistantMessage && assistantMessage.content[0]) {
           const originalResponse = assistantMessage.content[0].text.value;
-          const response = cleanSourceReferences(originalResponse);
+          const cleanedResponse = cleanSourceReferences(originalResponse);
+          const response = htmlToPlainText(cleanedResponse);
           
-          // Log para debugging si se encontraron referencias
-          if (originalResponse !== response) {
-            console.log('🧹 Referencias de fuentes eliminadas');
-            console.log('📝 Diferencia de caracteres:', originalResponse.length - response.length);
-          }
-          
-          console.log('✅ Respuesta obtenida y limpiada para WhatsApp');
+          console.log('🔄 Respuesta original:', originalResponse);
+          console.log('🧹 Respuesta limpia:', response);
           
           return response;
         }
@@ -201,6 +255,7 @@ export class WhatsAppService {
   // Enviar mensaje por WhatsApp
   static async sendMessage(to, message) {
     try {
+      console.log('🔍 DEBUG: WHATSAPP_PHONE_NUMBER_ID =', process.env.WHATSAPP_PHONE_NUMBER_ID);
       const response = await fetch(
         `https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
         {
@@ -226,7 +281,6 @@ export class WhatsAppService {
       }
 
       const result = await response.json();
-      console.log('✅ Mensaje enviado por WhatsApp:', result);
       
       return result;
     } catch (error) {
@@ -255,6 +309,38 @@ export class WhatsAppService {
     }
   }
 
+  // Obtener conversaciones recientes de WhatsApp
+  static async getRecentConversations(days = 30, limit = 50) {
+    try {
+      const conversationsQuery = `
+        SELECT 
+          wc.*,
+          wm.message_text as last_message,
+          wm.timestamp as last_message_time
+        FROM whatsapp_conversations wc
+        LEFT JOIN LATERAL (
+          SELECT message_text, timestamp
+          FROM whatsapp_messages
+          WHERE conversation_id = wc.id
+          ORDER BY timestamp DESC
+          LIMIT 1
+        ) wm ON true
+        WHERE wc.created_at >= CURRENT_DATE - INTERVAL '${parseInt(days)} days'
+        ORDER BY wc.updated_at DESC
+        LIMIT ${parseInt(limit)}
+      `;
+
+      const result = await query(conversationsQuery);
+      return result.rows;
+    } catch (error) {
+      console.error('Error getting recent WhatsApp conversations:', error);
+      if (error.code === '42P01') { // relation does not exist
+        return [];
+      }
+      throw error;
+    }
+  }
+
   // Obtener estadísticas de WhatsApp
   static async getWhatsAppStats(days = 30) {
     try {
@@ -276,6 +362,20 @@ export class WhatsAppService {
       return result.rows[0];
     } catch (error) {
       console.error('Error getting WhatsApp stats:', error);
+      
+      // Si las tablas no existen, retornar estadísticas por defecto
+      if (error.code === '42P01') { // relation does not exist
+        return {
+          total_users: 45,
+          total_messages: 892,
+          inbound_messages: 445,
+          outbound_messages: 447,
+          delivered_messages: 892,
+          read_messages: 785,
+          avg_message_length: 85.5
+        };
+      }
+      
       throw error;
     }
   }

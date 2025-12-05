@@ -1,21 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Production configuration
-  output: 'standalone',
+  // Configuración para producción
+  // output: 'standalone',   // Comentar temporalmente
    
-  // Image configuration
+  // Configuración de imágenes para AWS
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'example.com',
+        hostname: 'www.comodoro.gov.ar',
       },
-      // Add your domains here
+      {
+        protocol: 'https',
+        hostname: 'chatbot.isurgob.net',
+      },
     ],
     unoptimized: false,
   },
   
-  // Security headers
+  // Headers de seguridad
   async headers() {
     return [
       {
@@ -23,7 +26,11 @@ const nextConfig = {
         headers: [
           {
             key: 'X-Frame-Options',
-            value: 'DENY',
+            value: 'ALLOWALL',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors *;",
           },
           {
             key: 'X-Content-Type-Options',
@@ -38,15 +45,15 @@ const nextConfig = {
     ]
   },
   
-  // Deployment configuration
+  // Configuración para AWS
   trailingSlash: false,
   
-  // Public environment variables
+  // Variables de entorno públicas
   env: {
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
   },
   
-  // Output file tracing configuration
+  // Silenciar warning de workspace root
   outputFileTracingRoot: process.cwd(),
 };
 

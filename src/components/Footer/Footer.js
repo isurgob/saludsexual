@@ -23,56 +23,65 @@ const Footer = () => {
   return (
     <Box className={styles.footer}>
       <Container size="xl" py="xl">
-        {/* Enlaces de Acceso Rápido - Simples */}
-        <Group justify="center" gap="xl" mb="xl" wrap="wrap">
-          <Anchor 
-            component={Link} 
-            href="/mapa" 
-            className={styles.simpleLink}
-            size="sm"
+        {/* Información de Contacto Institucional */}
+        <Stack gap="sm" mb="xl" align="center">
+          <Text size="sm" fw={600} c="white" mb="sm">
+            Contactos Institucionales
+          </Text>
+          
+          <Group 
+            justify={{ base: "flex-start", md: "space-between" }} 
+            gap="xl" 
+            wrap="wrap" 
+            w="100%"
+            align="flex-start"
           >
-            <Group gap="xs" align="center">
-              <IconMapPin size={16} />
-              <Text>Centros de Atención</Text>
-            </Group>
-          </Anchor>
-
-          <Anchor 
-            component={Link} 
-            href="/testeos" 
-            className={styles.simpleLink}
-            size="sm"
-          >
-            <Group gap="xs" align="center">
-              <IconTestPipe size={16} />
-              <Text>Quiero Testearme</Text>
-            </Group>
-          </Anchor>
-
-          <Anchor 
-            component={Link} 
-            href="/mapa" 
-            className={styles.simpleLink}
-            size="sm"
-          >
-            <Group gap="xs" align="center">
-              <IconStethoscope size={16} />
-              <Text>Centros de Salud</Text>
-            </Group>
-          </Anchor>
-
-          <Anchor 
-            component={Link} 
-            href="/contacto" 
-            className={styles.simpleLink}
-            size="sm"
-          >
-            <Group gap="xs" align="center">
-              <IconPhone size={16} />
-              <Text>Contacto</Text>
-            </Group>
-          </Anchor>
-        </Group>
+            {/* Columna 1 - Responsive: izquierda en mobile, izquierda en desktop */}
+            <Stack 
+              gap="sm" 
+              align={{ base: "flex-start", md: "flex-start" }} 
+              miw={300} 
+              style={{ flex: 1 }}
+            >
+              {/* NUEVO: Secretaría de Salud - PRIMERO */}
+              <Stack gap={2} align="flex-start">
+                <Text size="xs" c="white" fw={500} ta="left">
+                  <IconPhone size={14} style={{ display: 'inline', marginRight: '4px' }} />
+                  Secretaría de Salud
+                </Text>
+                <Text size="xs" c="white" opacity={0.9} ta="left">Sarmiento 680 - Tel. 4461151</Text>
+              </Stack>
+              
+              <Stack gap={2} align="flex-start">
+                <Text size="xs" c="white" fw={500} ta="left">Secretaría de la Mujer</Text>
+                <Text size="xs" c="white" opacity={0.9} ta="left">Tel. 4063157</Text>
+              </Stack>
+              
+              <Stack gap={2} align="flex-start">
+                <Text size="xs" c="white" fw={500} ta="left">Dir. Gral. de Protección Integral de Derechos de la Mujer, Género, Juventud y Diversidad</Text>
+                <Text size="xs" c="white" opacity={0.9} ta="left">Tel. 297155370262</Text>
+              </Stack>
+            </Stack>
+            
+            {/* Columna 2 - Responsive: izquierda en mobile, derecha en desktop */}
+            <Stack 
+              gap="sm" 
+              align={{ base: "flex-start", md: "flex-end" }} 
+              miw={300} 
+              style={{ flex: 1 }}
+            >
+              <Stack gap={2} align={{ base: "flex-start", md: "flex-end" }}>
+                <Text size="xs" c="white" fw={500} ta={{ base: "left", md: "right" }}>Guardia Secretaría de la Mujer, Género, Juventud y Diversidad</Text>
+                <Text size="xs" c="white" opacity={0.9} ta={{ base: "left", md: "right" }}>Tel. 297154130813</Text>
+              </Stack>
+              
+              <Stack gap={2} align={{ base: "flex-start", md: "flex-end" }}>
+                <Text size="xs" c="white" fw={500} ta={{ base: "left", md: "right" }}>Dir. de Diversidad LGBTIQ+ y Nuevas Mayorías</Text>
+                <Text size="xs" c="white" opacity={0.9} ta={{ base: "left", md: "right" }}>Tel. 4486950</Text>
+              </Stack>
+            </Stack>
+          </Group>
+        </Stack>
 
         {/* Divisor */}
         <Box className={styles.divider} />

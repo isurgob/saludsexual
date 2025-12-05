@@ -16,7 +16,6 @@ export const getArticulos = async () => {
 // Función para obtener un artículo por ID
 export const getArticuloById = async (id) => {
     try {
-        console.log(`🔍 Obteniendo artículo con ID: ${id}`);
         const result = await query('SELECT * FROM get_articulo_by_id($1)', [id]);
         
         if (result.rows.length === 0) {

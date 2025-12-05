@@ -4,6 +4,9 @@ export default function Document() {
   return (
     <Html lang="es">
       <Head>
+        {/* Facebook Domain Verification */}
+        <meta name="facebook-domain-verification" content="f70xq6an59afvdcbml4bujn7zxyza5" />
+        
         {/* Favicon */}
         <link rel="icon" href="/logo_salud.png" />
         <link rel="apple-touch-icon" href="/logo_salud.png" />
