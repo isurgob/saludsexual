@@ -4,7 +4,7 @@
 // ====================================
 
 import { query } from '../config/db';
-import openai from '../config/openai';
+import { createConversation, askAssistant } from '../config/assistant';
 
 // Función para limpiar referencias de fuentes de OpenAI
 function cleanSourceReferences(text) {
@@ -89,20 +89,21 @@ export class WhatsAppService {
     }
   }
 
-  // Obtener thread ID existente o crear uno nuevo
+  // Obtener la conversación de OpenAI existente o crear una nueva
+  // (la columna thread_id guarda el id de la conversación de OpenAI: conv_...)
   static async getOrCreateThread(phoneNumber) {
     try {
       const conversation = await this.getOrCreateConversation(phoneNumber);
-      
-      if (conversation.thread_id) {
+
+      // Los ids "thread_..." son de la Assistants API (apagada): se reemplazan por una conversación nueva
+      if (conversation.thread_id?.startsWith('conv_')) {
         return conversation.thread_id;
       }
 
-      // Crear nuevo thread
-      const thread = await openai.beta.threads.create();
-      const threadId = thread.id;
+      // Crear nueva conversación
+      const threadId = await createConversation();
 
-      // Actualizar conversación con el thread ID
+      // Actualizar conversación con el ID de la conversación de OpenAI
       await query(
         'UPDATE whatsapp_conversations SET thread_id = $1, updated_at = CURRENT_TIMESTAMP WHERE phone_number = $2',
         [threadId, phoneNumber]
@@ -202,49 +203,27 @@ export class WhatsAppService {
         return this.getWelcomeMessage();
       }
 
-      const ASSISTANT_ID = process.env.OPENAI_ASSISTANT_ID;
-      
-      if (!ASSISTANT_ID) {
-        throw new Error('OPENAI_ASSISTANT_ID no está configurado');
-      }
-
-      // Obtener o crear thread para esta conversación
+      // Obtener o crear la conversación de OpenAI para este número
       const threadId = await this.getOrCreateThread(phoneNumber);
 
-      // Agregar mensaje del usuario al thread
-      await openai.beta.threads.messages.create(threadId, {
-        role: 'user',
-        content: `Mensaje de WhatsApp desde ${phoneNumber}: ${messageText}`,
-      });
+      // Consultar al asistente
+      const result = await askAssistant(
+        threadId,
+        `Mensaje de WhatsApp desde ${phoneNumber}: ${messageText}`
+      );
 
-      // Crear y ejecutar run con polling automático
-      const run = await openai.beta.threads.runs.createAndPoll(threadId, {
-        assistant_id: ASSISTANT_ID,
-      });
+      if (result.text) {
+        const originalResponse = result.text;
+        const cleanedResponse = cleanSourceReferences(originalResponse);
+        const response = htmlToPlainText(cleanedResponse);
 
+        console.log('🔄 Respuesta original:', originalResponse);
+        console.log('🧹 Respuesta limpia:', response);
 
-      if (run.status === 'completed') {
-        // Obtener los mensajes del thread
-        const messages = await openai.beta.threads.messages.list(threadId);
-        
-        // Encontrar la respuesta del asistente
-        const assistantMessage = messages.data.find(
-          msg => msg.role === 'assistant' && msg.run_id === run.id
-        );
-
-        if (assistantMessage && assistantMessage.content[0]) {
-          const originalResponse = assistantMessage.content[0].text.value;
-          const cleanedResponse = cleanSourceReferences(originalResponse);
-          const response = htmlToPlainText(cleanedResponse);
-          
-          console.log('🔄 Respuesta original:', originalResponse);
-          console.log('🧹 Respuesta limpia:', response);
-          
-          return response;
-        }
+        return response;
       }
 
-      throw new Error(`Run falló con estado: ${run.status}`);
+      throw new Error(`Respuesta vacía del asistente, estado: ${result.status}`);
 
     } catch (error) {
       console.error('❌ Error procesando mensaje con IA:', error);

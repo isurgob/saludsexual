@@ -61,9 +61,9 @@ El componente de mapa interactivo está ubicado en `src/components/InteractiveMa
 
 El chatbot está configurado para proporcionar información de salud. Podrías querer:
 
-1. Crear un nuevo Asistente OpenAI específicamente para tu organización
-2. Actualizar los prompts del sistema para que coincidan con tus protocolos de salud locales
-3. Configurar la base de conocimiento del asistente con tus recursos de salud
+1. Crear un vector store en OpenAI (Storage → Vector stores) con tus documentos y configurar `OPENAI_VECTOR_STORE_ID`
+2. Actualizar las instrucciones del asistente en `src/config/assistantInstructions.js` según tus protocolos de salud locales
+3. Elegir el modelo con `OPENAI_MODEL` (usa la Responses API de OpenAI)
 
 ## 📊 Panel de Administración
 

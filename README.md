@@ -50,7 +50,7 @@ cp environments/.env.prod.example environments/.env.prod
 ```
 
 Variables requeridas (ver archivos de ejemplo para detalles):
-- **Configuración OpenAI**: Clave API e ID del Asistente
+- **Configuración OpenAI**: Clave API, ID del vector store y modelo
 - **Base de Datos PostgreSQL**: Detalles de conexión
 - **NextAuth.js**: Clave secreta y URL
 - **WhatsApp Business API**: Tokens de acceso (opcional)

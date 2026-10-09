@@ -30,7 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files (nunca subir claves: el repo es público)
+environments/.env.*
+!environments/.env.*.example
 
 
 # deployment scripts (no longer needed for manual deployment)
