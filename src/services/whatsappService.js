@@ -190,7 +190,7 @@ export class WhatsAppService {
 
   // Obtener mensaje de bienvenida personalizado para WhatsApp
   static getWelcomeMessage() {
-    return `¡Hola, soy Mara! Puedo responder tus dudas sobre VIH e Infecciones de Transmisión Sexual.\n\nEsta conversación es anónima y confidencial. Al chatear estás aceptando las Políticas de Privacidad - chatbot.isurgob.net/politicas-privacidad .\n\n¿En qué puedo ayudarte?`;
+    return `¡Hola, soy Mara! Puedo responder tus dudas sobre VIH e Infecciones de Transmisión Sexual.\n\nEsta conversación es anónima y confidencial. Al chatear estás aceptando las Políticas de Privacidad - www.comodoro.gov.ar/saludsexual/politicas-privacidad .\n\n¿En qué puedo ayudarte?`;
   }
 
   // Procesar mensaje con OpenAI
